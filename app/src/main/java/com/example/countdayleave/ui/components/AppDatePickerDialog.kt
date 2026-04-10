@@ -1,5 +1,7 @@
 package com.example.countdayleave.ui.components
 
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -44,7 +46,12 @@ fun AppDatePickerDialog(
     ) {
         DatePicker(
             state = datePickerState,
-            modifier = Modifier.animateContentSize(),
+            modifier = Modifier.animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ),
             colors = DatePickerDefaults.colors(
                 containerColor = AppTheme.colors.surfaceCard,
                 titleContentColor = AppTheme.colors.textPrimary,
