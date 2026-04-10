@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode colors -->
+    <color name="background_deep_dark">#FF080B18</color>
+    <color name="background_dark_dark">#FF0D1021</color>
+    <color name="accent_purple">#FF7C6FF7</color>
+    <!-- Light mode colors -->
+    <color name="background_deep_light">#FFF0F2FF</color>
+    <color name="background_dark_light">#FFFFFFFF</color>
+</resources>
