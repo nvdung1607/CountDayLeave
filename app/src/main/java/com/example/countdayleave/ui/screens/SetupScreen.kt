@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.example.countdayleave.ui.components.AppDatePickerDialog
 import com.example.countdayleave.ui.components.AppTimePickerDialog
 import com.example.countdayleave.ui.theme.*
+import com.example.countdayleave.model.NotifyTime
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -32,15 +33,13 @@ import java.util.*
 fun SetupScreen(
     initialMilestoneName: String = "",
     initialTargetMillis: Long? = null,
-    initialNotifyHour: Int = 8,
-    initialNotifyMinute: Int = 0,
+    initialNotifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     initialNotifyEnabled: Boolean = true,
     isEditing: Boolean = false,
     onSave: (
         milestoneName: String,
         targetEpochMillis: Long,
-        notifyHour: Int,
-        notifyMinute: Int,
+        notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean
     ) -> Unit
 ) {
@@ -57,17 +56,17 @@ fun SetupScreen(
             Calendar.getInstance().apply { timeInMillis = initialTargetMillis }.get(Calendar.MINUTE)
         } else 0
     ) }
-    var notifyHour by remember { mutableIntStateOf(initialNotifyHour) }
-    var notifyMinute by remember { mutableIntStateOf(initialNotifyMinute) }
+    var notifyTimes by remember { mutableStateOf(initialNotifyTimes) }
     var notifyEnabled by remember { mutableStateOf(initialNotifyEnabled) }
 
     // ---- Dialog visibility ----
     var showDatePicker by remember { mutableStateOf(false) }
     var showTargetTimePicker by remember { mutableStateOf(false) }
     var showNotifyTimePicker by remember { mutableStateOf(false) }
+    var editTimeIndex by remember { mutableStateOf<Int?>(null) }
 
     // ---- Validation ----
-    val isValid = milestoneName.isNotBlank() && targetDateMillis != null
+    val isValid = milestoneName.isNotBlank() && targetDateMillis != null && (!notifyEnabled || notifyTimes.isNotEmpty())
 
     // ---- Helper: combine date + time → epoch millis ----
     fun buildTargetEpoch(): Long {
@@ -98,11 +97,25 @@ fun SetupScreen(
         )
     }
     if (showNotifyTimePicker) {
+        val initHour = editTimeIndex?.let { notifyTimes.getOrNull(it)?.hour } ?: 8
+        val initMinute = editTimeIndex?.let { notifyTimes.getOrNull(it)?.minute } ?: 0
+
         AppTimePickerDialog(
-            initialHour = notifyHour,
-            initialMinute = notifyMinute,
-            title = "Giờ nhắc hằng ngày",
-            onTimeSelected = { h, m -> notifyHour = h; notifyMinute = m },
+            initialHour = initHour,
+            initialMinute = initMinute,
+            title = if (editTimeIndex == null) "Thêm giờ nhắc mới" else "Chỉnh sửa giờ",
+            onTimeSelected = { h, m -> 
+                val newTime = NotifyTime(h, m)
+                if (editTimeIndex == null) {
+                    if (!notifyTimes.contains(newTime)) {
+                        notifyTimes = (notifyTimes + newTime).sortedWith(compareBy({ it.hour }, { it.minute }))
+                    }
+                } else {
+                    val newList = notifyTimes.toMutableList()
+                    newList[editTimeIndex!!] = newTime
+                    notifyTimes = newList.distinct().sortedWith(compareBy({ it.hour }, { it.minute }))
+                }
+            },
             onDismiss = { showNotifyTimePicker = false }
         )
     }
@@ -119,8 +132,8 @@ fun SetupScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp)
-                // Thêm padding top động để tránh vùng Status bar / rãnh camera
-                .windowInsetsPadding(WindowInsets.statusBars),
+                // Thêm padding top động để tránh vùng Status bar / rãnh camera và nav bar
+                .windowInsetsPadding(WindowInsets.systemBars),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -232,34 +245,68 @@ fun SetupScreen(
                             Spacer(Modifier.height(12.dp))
                             HorizontalDivider(color = AppTheme.colors.surfaceElevated)
                             Spacer(Modifier.height(12.dp))
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(AppTheme.colors.surfaceElevated)
-                                    .clickable { showNotifyTimePicker = true }
-                                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                            
+                            notifyTimes.forEachIndexed { index, time ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(AppTheme.colors.surfaceElevated)
+                                        .clickable { 
+                                            editTimeIndex = index
+                                            showNotifyTimePicker = true 
+                                        }
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Alarm,
+                                        contentDescription = null,
+                                        tint = AppTheme.colors.accentBlue,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(Modifier.width(10.dp))
+                                    Text(
+                                        "Thông báo lúc",
+                                        color = AppTheme.colors.textSecondary,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    Text(
+                                        String.format("%02d:%02d", time.hour, time.minute),
+                                        color = AppTheme.colors.accentBlue,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(Modifier.width(8.dp))
+                                    IconButton(
+                                        onClick = {
+                                            notifyTimes = notifyTimes.toMutableList().apply { removeAt(index) }
+                                        },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Close,
+                                            contentDescription = "Xóa",
+                                            tint = AppTheme.colors.textMuted,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(Modifier.height(8.dp))
+                            }
+                            
+                            // Nút thêm giờ
+                            TextButton(
+                                onClick = {
+                                    editTimeIndex = null
+                                    showNotifyTimePicker = true
+                                },
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Alarm,
-                                    contentDescription = null,
-                                    tint = AppTheme.colors.accentBlue,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(Modifier.width(10.dp))
-                                Text(
-                                    "Thông báo lúc",
-                                    color = AppTheme.colors.textSecondary,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Text(
-                                    String.format("%02d:%02d", notifyHour, notifyMinute),
-                                    color = AppTheme.colors.accentBlue,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Icon(Icons.Rounded.Add, contentDescription = null, tint = AppTheme.colors.accentPurple)
+                                Spacer(Modifier.width(8.dp))
+                                Text("Thêm giờ thông báo", color = AppTheme.colors.accentPurple, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -275,8 +322,7 @@ fun SetupScreen(
                         onSave(
                             milestoneName.trim(),
                             buildTargetEpoch(),
-                            notifyHour,
-                            notifyMinute,
+                            notifyTimes,
                             notifyEnabled
                         )
                     }

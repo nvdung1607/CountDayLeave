@@ -18,14 +18,20 @@ class NotificationScheduler(private val context: Context) {
     /**
      * Đặt alarm lặp lại hằng ngày vào giờ đã thiết lập.
      * Sử dụng setExactAndAllowWhileIdle để alarm hoạt động ngay cả khi máy ở chế độ Doze.
-     * Sau mỗi lần nhận alarm, Receiver sẽ tự schedule lần tiếp theo.
+     * Tự động tìm giờ kế tiếp nhỏ nhất trong tương lai từ danh sách notifyTimes.
      */
     fun schedule(config: CountdownConfig) {
         val intent = buildIntent()
         // Huỷ alarm cũ nếu có
         alarmManager.cancel(intent)
 
-        val triggerTime = nextTriggerTime(config.notifyHour, config.notifyMinute)
+        if (config.notifyTimes.isEmpty()) return
+
+        val nextTimes = config.notifyTimes.map { 
+            nextTriggerTime(it.hour, it.minute)
+        }
+        val triggerTime = nextTimes.minOrNull() ?: return
+
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
             triggerTime,
@@ -36,17 +42,6 @@ class NotificationScheduler(private val context: Context) {
     /** Huỷ alarm đang đặt. */
     fun cancel() {
         alarmManager.cancel(buildIntent())
-    }
-
-    /** Schedule lần tiếp theo (gọi từ Receiver sau khi đã xử lý). */
-    fun scheduleNext(hour: Int, minute: Int) {
-        val intent = buildIntent()
-        val triggerTime = nextTriggerTime(hour, minute, forceNextDay = true)
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            triggerTime,
-            intent
-        )
     }
 
     private fun buildIntent(): PendingIntent {

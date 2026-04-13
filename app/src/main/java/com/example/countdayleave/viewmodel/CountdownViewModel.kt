@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.countdayleave.data.CountdownDataStore
 import com.example.countdayleave.model.CountdownConfig
+import com.example.countdayleave.model.NotifyTime
 import com.example.countdayleave.notification.NotificationScheduler
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -26,8 +27,7 @@ data class CountdownUiState(
     val seconds: Long = 0L,
     val isFinished: Boolean = false,
     // Setup form state
-    val notifyHour: Int = 8,
-    val notifyMinute: Int = 0,
+    val notifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     val notifyEnabled: Boolean = true
 )
 
@@ -51,8 +51,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                         isConfigured = true,
                         milestoneName = config.milestoneName,
                         targetEpochMillis = config.targetEpochMillis,
-                        notifyHour = config.notifyHour,
-                        notifyMinute = config.notifyMinute,
+                        notifyTimes = config.notifyTimes,
                         notifyEnabled = config.notifyEnabled
                     )
                 }
@@ -67,16 +66,14 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     fun saveConfig(
         milestoneName: String,
         targetEpochMillis: Long,
-        notifyHour: Int,
-        notifyMinute: Int,
+        notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean
     ) {
         viewModelScope.launch {
             val config = CountdownConfig(
                 milestoneName = milestoneName,
                 targetEpochMillis = targetEpochMillis,
-                notifyHour = notifyHour,
-                notifyMinute = notifyMinute,
+                notifyTimes = notifyTimes,
                 notifyEnabled = notifyEnabled
             )
             dataStore.saveConfig(config)
@@ -85,8 +82,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                     isConfigured = true,
                     milestoneName = milestoneName,
                     targetEpochMillis = targetEpochMillis,
-                    notifyHour = notifyHour,
-                    notifyMinute = notifyMinute,
+                    notifyTimes = notifyTimes,
                     notifyEnabled = notifyEnabled
                 )
             }

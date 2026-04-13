@@ -128,12 +128,11 @@ fun AppNavigation(
             SetupScreen(
                 initialMilestoneName  = uiState.milestoneName,
                 initialTargetMillis   = if (uiState.targetEpochMillis > 0) uiState.targetEpochMillis else null,
-                initialNotifyHour     = uiState.notifyHour,
-                initialNotifyMinute   = uiState.notifyMinute,
+                initialNotifyTimes    = uiState.notifyTimes,
                 initialNotifyEnabled  = uiState.notifyEnabled,
                 isEditing             = uiState.isConfigured,
-                onSave = { name, targetMillis, notifyHour, notifyMinute, notifyEnabled ->
-                    viewModel.saveConfig(name, targetMillis, notifyHour, notifyMinute, notifyEnabled)
+                onSave = { name, targetMillis, notifyTimes, notifyEnabled ->
+                    viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled)
                     navController.navigate(Routes.COUNTDOWN) {
                         popUpTo(Routes.SETUP) { inclusive = true }
                     }

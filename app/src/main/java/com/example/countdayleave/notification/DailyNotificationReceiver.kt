@@ -66,9 +66,9 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
                 sendNotification(context, title, body, tapAction)
 
-                // Schedule lần tiếp theo (alarm không tự lặp, phải set lại)
+                // Tính toán và schedule alarm cho thời điểm kế tiếp
                 val scheduler = NotificationScheduler(context)
-                scheduler.scheduleNext(config.notifyHour, config.notifyMinute)
+                scheduler.schedule(config)
 
             } finally {
                 pendingResult.finish()

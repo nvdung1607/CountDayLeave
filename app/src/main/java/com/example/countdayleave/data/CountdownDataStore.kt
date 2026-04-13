@@ -20,8 +20,7 @@ class CountdownDataStore(private val context: Context) {
     companion object {
         private val KEY_MILESTONE_NAME = stringPreferencesKey("milestone_name")
         private val KEY_TARGET_EPOCH = longPreferencesKey("target_epoch_millis")
-        private val KEY_NOTIFY_HOUR = intPreferencesKey("notify_hour")
-        private val KEY_NOTIFY_MINUTE = intPreferencesKey("notify_minute")
+        private val KEY_NOTIFY_TIMES = stringPreferencesKey("notify_times")
         private val KEY_NOTIFY_ENABLED = booleanPreferencesKey("notify_enabled")
         private val KEY_IS_CONFIGURED = booleanPreferencesKey("is_configured")
     }
@@ -30,11 +29,25 @@ class CountdownDataStore(private val context: Context) {
     val configFlow: Flow<CountdownConfig?> = context.dataStore.data.map { prefs ->
         val isConfigured = prefs[KEY_IS_CONFIGURED] ?: false
         if (!isConfigured) return@map null
+        
+        val notifyTimesStr = prefs[KEY_NOTIFY_TIMES] ?: "08:00"
+        val notifyTimesList = if (notifyTimesStr.isBlank()) {
+            emptyList()
+        } else {
+            notifyTimesStr.split(",").mapNotNull {
+                val parts = it.split(":")
+                if (parts.size == 2) {
+                    val h = parts[0].toIntOrNull()
+                    val m = parts[1].toIntOrNull()
+                    if (h != null && m != null) com.example.countdayleave.model.NotifyTime(h, m) else null
+                } else null
+            }
+        }
+        
         CountdownConfig(
             milestoneName = prefs[KEY_MILESTONE_NAME] ?: "",
             targetEpochMillis = prefs[KEY_TARGET_EPOCH] ?: 0L,
-            notifyHour = prefs[KEY_NOTIFY_HOUR] ?: 8,
-            notifyMinute = prefs[KEY_NOTIFY_MINUTE] ?: 0,
+            notifyTimes = notifyTimesList,
             notifyEnabled = prefs[KEY_NOTIFY_ENABLED] ?: true
         )
     }
@@ -44,8 +57,12 @@ class CountdownDataStore(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs[KEY_MILESTONE_NAME] = config.milestoneName
             prefs[KEY_TARGET_EPOCH] = config.targetEpochMillis
-            prefs[KEY_NOTIFY_HOUR] = config.notifyHour
-            prefs[KEY_NOTIFY_MINUTE] = config.notifyMinute
+            
+            val timesStr = config.notifyTimes.joinToString(",") { 
+                String.format("%02d:%02d", it.hour, it.minute) 
+            }
+            prefs[KEY_NOTIFY_TIMES] = timesStr
+            
             prefs[KEY_NOTIFY_ENABLED] = config.notifyEnabled
             prefs[KEY_IS_CONFIGURED] = true
         }
