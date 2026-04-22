@@ -1,0 +1,97 @@
+@startuml
+class com.example.countdayleave.notification.NotificationScheduler$Companion {
++  REQUEST_CODE
+}
+
+class com.example.countdayleave.notification.NotificationScheduler {
+-  alarmManager
++ void schedule(CountdownConfig)
++ void cancel()
+- PendingIntent buildIntent()
+- Long nextTriggerTime(Int,Int,Boolean)
+}
+
+
+class com.example.countdayleave.data.CountdownDataStore$Companion {
+-  KEY_MILESTONE_NAME
+-  KEY_TARGET_EPOCH
+-  KEY_NOTIFY_TIMES
+-  KEY_NOTIFY_ENABLED
+-  KEY_IS_CONFIGURED
+}
+
+class com.example.countdayleave.data.CountdownDataStore {
++ Flow<CountdownConfig?> configFlow
++ void saveConfig(CountdownConfig)
++ void clearConfig()
+}
+
+
+class com.example.countdayleave.notification.DailyNotificationReceiver$Companion {
++  CHANNEL_ID
++  NOTIFICATION_ID
++  ACTION_OPEN_CELEBRATION
+}
+
+class com.example.countdayleave.notification.DailyNotificationReceiver {
++ void onReceive(Context,Intent)
+- void sendNotification(Context,String,String,String)
+}
+
+class com.example.countdayleave.model.CountdownConfig {
+}
+class com.example.countdayleave.ui.theme.AppTheme {
++ AppColors colors
+}
+
+class com.example.countdayleave.ui.components.Particle {
+}
+class com.example.countdayleave.ui.components.FireworkBurst {
+}
+class com.example.countdayleave.model.NotifyTime {
+}
+class com.example.countdayleave.notification.BootReceiver {
++ void onReceive(Context,Intent)
+}
+
+class com.example.countdayleave.Routes {
++  SETUP
++  COUNTDOWN
++  CELEBRATION
+}
+
+class com.example.countdayleave.MainActivity {
+-  notificationPermissionLauncher
++ void onCreate(Bundle?)
+- String resolveStartDestination()
+- void createNotificationChannel()
+}
+
+
+class com.example.countdayleave.ui.theme.AppColors {
+}
+class com.example.countdayleave.viewmodel.CountdownUiState {
+}
+class com.example.countdayleave.viewmodel.CountdownViewModel {
+-  dataStore
+-  scheduler
+-  _uiState
++ StateFlow<CountdownUiState> uiState
+- Job? timerJob
++ void saveConfig(String,Long,List<NotifyTime>,Boolean)
++ void resetConfig()
+- void startTimer()
++ void onCleared()
+}
+
+
+
+
+com.example.countdayleave.notification.NotificationScheduler +.. com.example.countdayleave.notification.NotificationScheduler$Companion
+com.example.countdayleave.data.CountdownDataStore +.. com.example.countdayleave.data.CountdownDataStore$Companion
+com.example.countdayleave.notification.DailyNotificationReceiver +.. com.example.countdayleave.notification.DailyNotificationReceiver$Companion
+android.content.BroadcastReceiver <|-- com.example.countdayleave.notification.DailyNotificationReceiver
+android.content.BroadcastReceiver <|-- com.example.countdayleave.notification.BootReceiver
+androidx.activity.ComponentActivity <|-- com.example.countdayleave.MainActivity
+androidx.lifecycle.AndroidViewModel <|-- com.example.countdayleave.viewmodel.CountdownViewModel
+@enduml

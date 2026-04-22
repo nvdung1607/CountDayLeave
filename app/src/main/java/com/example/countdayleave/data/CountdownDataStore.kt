@@ -30,17 +30,33 @@ class CountdownDataStore(private val context: Context) {
         val isConfigured = prefs[KEY_IS_CONFIGURED] ?: false
         if (!isConfigured) return@map null
         
-        val notifyTimesStr = prefs[KEY_NOTIFY_TIMES] ?: "08:00"
-        val notifyTimesList = if (notifyTimesStr.isBlank()) {
-            emptyList()
+        // Legacy keys for migration
+        val keyNotifyHour = intPreferencesKey("notify_hour")
+        val keyNotifyMinute = intPreferencesKey("notify_minute")
+
+        val notifyTimesStr = prefs[KEY_NOTIFY_TIMES]
+        
+        val notifyTimesList = if (notifyTimesStr != null) {
+            if (notifyTimesStr.isBlank()) {
+                emptyList()
+            } else {
+                notifyTimesStr.split(",").mapNotNull {
+                    val parts = it.split(":")
+                    if (parts.size == 2) {
+                        val h = parts[0].toIntOrNull()
+                        val m = parts[1].toIntOrNull()
+                        if (h != null && m != null) com.example.countdayleave.model.NotifyTime(h, m) else null
+                    } else null
+                }
+            }
         } else {
-            notifyTimesStr.split(",").mapNotNull {
-                val parts = it.split(":")
-                if (parts.size == 2) {
-                    val h = parts[0].toIntOrNull()
-                    val m = parts[1].toIntOrNull()
-                    if (h != null && m != null) com.example.countdayleave.model.NotifyTime(h, m) else null
-                } else null
+            // Try migration
+            val oldHour = prefs[keyNotifyHour]
+            val oldMinute = prefs[keyNotifyMinute]
+            if (oldHour != null && oldMinute != null) {
+                listOf(com.example.countdayleave.model.NotifyTime(oldHour, oldMinute))
+            } else {
+                listOf(com.example.countdayleave.model.NotifyTime(8, 0))
             }
         }
         
