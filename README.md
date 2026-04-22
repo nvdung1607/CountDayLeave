@@ -63,8 +63,29 @@ classDiagram
     }
 
     class CountdownConfig {
+        <<data>>
         +milestoneName: String
         +targetEpochMillis: Long
+        +notifyTimes: List~NotifyTime~
+        +notifyEnabled: Boolean
+    }
+
+    class NotifyTime {
+        <<data>>
+        +hour: Int
+        +minute: Int
+    }
+
+    class CountdownUiState {
+        <<data>>
+        +isLoading: Boolean
+        +isConfigured: Boolean
+        +milestoneName: String
+        +days: Long
+        +hours: Long
+        +minutes: Long
+        +seconds: Long
+        +isFinished: Boolean
         +notifyTimes: List~NotifyTime~
         +notifyEnabled: Boolean
     }
