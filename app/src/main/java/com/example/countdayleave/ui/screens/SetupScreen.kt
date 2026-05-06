@@ -28,6 +28,8 @@ import com.example.countdayleave.model.NotifyTime
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val DEFAULT_TARGET_HOUR = 9
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(
@@ -49,7 +51,7 @@ fun SetupScreen(
     var targetHour by remember { mutableIntStateOf(
         if (initialTargetMillis != null) {
             Calendar.getInstance().apply { timeInMillis = initialTargetMillis }.get(Calendar.HOUR_OF_DAY)
-        } else 9
+        } else DEFAULT_TARGET_HOUR
     ) }
     var targetMinute by remember { mutableIntStateOf(
         if (initialTargetMillis != null) {

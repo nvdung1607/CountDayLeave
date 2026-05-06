@@ -11,6 +11,7 @@ import com.example.countdayleave.R
 import com.example.countdayleave.data.CountdownDataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -26,7 +27,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // Sử dụng goAsync để chạy coroutine từ BroadcastReceiver
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
                 val dataStore = CountdownDataStore(context)
                 val config = dataStore.configFlow.first()

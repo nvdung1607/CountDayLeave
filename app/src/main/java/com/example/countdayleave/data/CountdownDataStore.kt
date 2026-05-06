@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.countdayleave.model.CountdownConfig
+import com.example.countdayleave.model.NotifyTime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -45,7 +46,7 @@ class CountdownDataStore(private val context: Context) {
                     if (parts.size == 2) {
                         val h = parts[0].toIntOrNull()
                         val m = parts[1].toIntOrNull()
-                        if (h != null && m != null) com.example.countdayleave.model.NotifyTime(h, m) else null
+                        if (h != null && m != null) NotifyTime(h, m) else null
                     } else null
                 }
             }
@@ -54,7 +55,7 @@ class CountdownDataStore(private val context: Context) {
             val oldHour = prefs[keyNotifyHour]
             val oldMinute = prefs[keyNotifyMinute]
             if (oldHour != null && oldMinute != null) {
-                listOf(com.example.countdayleave.model.NotifyTime(oldHour, oldMinute))
+                listOf(NotifyTime(oldHour, oldMinute))
             } else {
                 listOf(com.example.countdayleave.model.NotifyTime(8, 0))
             }

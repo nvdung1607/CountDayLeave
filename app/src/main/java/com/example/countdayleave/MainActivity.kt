@@ -25,7 +25,6 @@ import com.example.countdayleave.ui.screens.CountdownScreen
 import com.example.countdayleave.ui.screens.SetupScreen
 import com.example.countdayleave.ui.theme.CountDayLeaveTheme
 import com.example.countdayleave.viewmodel.CountdownViewModel
-import java.util.Calendar
 
 // ---- Navigation routes ----
 object Routes {
@@ -99,12 +98,10 @@ fun AppNavigation(
     val uiState by viewModel.uiState.collectAsState()
 
     // Observe loading finish → navigate to correct screen
-    LaunchedEffect(uiState.isLoading, uiState.isConfigured) {
-        if (!uiState.isLoading) {
-            if (!uiState.isConfigured) {
-                navController.navigate(Routes.SETUP) {
-                    popUpTo(0) { inclusive = true }
-                }
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading && !uiState.isConfigured) {
+            navController.navigate(Routes.SETUP) {
+                popUpTo(0) { inclusive = true }
             }
         }
     }

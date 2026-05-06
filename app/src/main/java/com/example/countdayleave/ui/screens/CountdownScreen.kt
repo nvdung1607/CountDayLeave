@@ -30,6 +30,7 @@ fun CountdownScreen(
     uiState: CountdownUiState,
     onNavigateToSetup: () -> Unit
 ) {
+    val notifyEnabled = uiState.notifyEnabled
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,14 +94,16 @@ fun CountdownScreen(
 
             Spacer(Modifier.weight(1f))
 
-            // Footer hint
-            Text(
-                text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
-                color = AppTheme.colors.textMuted,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp
-            )
+            // Footer hint — chỉ hiển thị khi thông báo đang bật
+            if (notifyEnabled) {
+                Text(
+                    text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
+                    color = AppTheme.colors.textMuted,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+            }
 
             Spacer(Modifier.height(32.dp))
         }

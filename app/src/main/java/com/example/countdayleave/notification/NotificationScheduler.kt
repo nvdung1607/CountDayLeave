@@ -16,9 +16,10 @@ class NotificationScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     /**
-     * Đặt alarm lặp lại hằng ngày vào giờ đã thiết lập.
+     * Đặt một alarm one-shot (setExactAndAllowWhileIdle) vào giờ gần nhất trong [config.notifyTimes].
+     * Khi alarm kích hoạt, [DailyNotificationReceiver] sẽ gửi thông báo rồi tự gọi [schedule] lại
+     * để đặt alarm cho ngày hôm sau → mô phỏng alarm lặp lại hằng ngày.
      * Sử dụng setExactAndAllowWhileIdle để alarm hoạt động ngay cả khi máy ở chế độ Doze.
-     * Tự động tìm giờ kế tiếp nhỏ nhất trong tương lai từ danh sách notifyTimes.
      */
     fun schedule(config: CountdownConfig) {
         val intent = buildIntent()
