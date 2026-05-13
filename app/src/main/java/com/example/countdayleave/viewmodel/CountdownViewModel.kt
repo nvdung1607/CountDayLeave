@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 data class CountdownUiState(
     val isLoading: Boolean = true,
-    val isConfigured: Boolean = false,
+    val eventId: String = "",
     val milestoneName: String = "",
     val targetEpochMillis: Long = 0L,
     val days: Long = 0L,
@@ -26,11 +26,14 @@ data class CountdownUiState(
     val minutes: Long = 0L,
     val seconds: Long = 0L,
     val isFinished: Boolean = false,
-    // Setup form state
     val notifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     val notifyEnabled: Boolean = true
 )
 
+/**
+ * ViewModel cho màn hình đếm ngược chi tiết của MỘT sự kiện.
+ * Nhận [eventId] để load đúng event từ DataStore.
+ */
 class CountdownViewModel(application: Application) : AndroidViewModel(application) {
 
     private val dataStore = CountdownDataStore(application)
@@ -41,14 +44,16 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
     private var timerJob: Job? = null
 
-    init {
+    /** Gọi sau khi ViewModel được tạo, truyền eventId cần load. */
+    fun loadEvent(eventId: String) {
         viewModelScope.launch {
-            val config = dataStore.configFlow.first()
+            val events = dataStore.eventsFlow.first()
+            val config = events.find { it.id == eventId }
             if (config != null) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        isConfigured = true,
+                        eventId = config.id,
                         milestoneName = config.milestoneName,
                         targetEpochMillis = config.targetEpochMillis,
                         notifyTimes = config.notifyTimes,
@@ -57,12 +62,12 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 }
                 startTimer()
             } else {
-                _uiState.update { it.copy(isLoading = false, isConfigured = false) }
+                _uiState.update { it.copy(isLoading = false) }
             }
         }
     }
 
-    /** Lưu config sau khi user setup xong. */
+    /** Lưu/cập nhật sự kiện này. */
     fun saveConfig(
         milestoneName: String,
         targetEpochMillis: Long,
@@ -70,39 +75,42 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         notifyEnabled: Boolean
     ) {
         viewModelScope.launch {
+            val currentId = _uiState.value.eventId.ifBlank {
+                java.util.UUID.randomUUID().toString()
+            }
             val config = CountdownConfig(
+                id = currentId,
                 milestoneName = milestoneName,
                 targetEpochMillis = targetEpochMillis,
                 notifyTimes = notifyTimes,
                 notifyEnabled = notifyEnabled
             )
-            dataStore.saveConfig(config)
+            dataStore.saveEvent(config)
             _uiState.update {
                 it.copy(
-                    isConfigured = true,
+                    isLoading = false,
+                    eventId = currentId,
                     milestoneName = milestoneName,
                     targetEpochMillis = targetEpochMillis,
                     notifyTimes = notifyTimes,
                     notifyEnabled = notifyEnabled
                 )
             }
-            // Schedule hoặc cancel notification
-            if (notifyEnabled) {
-                scheduler.schedule(config)
-            } else {
-                scheduler.cancel()
-            }
+            if (notifyEnabled) scheduler.schedule(config) else scheduler.cancel(currentId)
             startTimer()
         }
     }
 
-    /** Xóa config và reset về màn hình setup. */
-    fun resetConfig() {
+    /** Xóa sự kiện hiện tại. */
+    fun deleteCurrentEvent() {
         timerJob?.cancel()
         viewModelScope.launch {
-            dataStore.clearConfig()
-            scheduler.cancel()
-            _uiState.update { CountdownUiState(isLoading = false, isConfigured = false) }
+            val id = _uiState.value.eventId
+            if (id.isNotBlank()) {
+                scheduler.cancel(id)
+                dataStore.deleteEvent(id)
+            }
+            _uiState.update { CountdownUiState(isLoading = false) }
         }
     }
 
@@ -116,30 +124,21 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
 
                 if (diff <= 0) {
                     _uiState.update {
-                        it.copy(
-                            days = 0, hours = 0, minutes = 0, seconds = 0,
-                            isFinished = true
-                        )
+                        it.copy(days = 0, hours = 0, minutes = 0, seconds = 0, isFinished = true)
                     }
                     break
                 }
 
                 val totalSeconds = diff / 1000
-                val days    = totalSeconds / 86400
-                val hours   = (totalSeconds % 86400) / 3600
-                val minutes = (totalSeconds % 3600) / 60
-                val seconds = totalSeconds % 60
-
                 _uiState.update {
                     it.copy(
-                        days = days,
-                        hours = hours,
-                        minutes = minutes,
-                        seconds = seconds,
+                        days    = totalSeconds / 86400,
+                        hours   = (totalSeconds % 86400) / 3600,
+                        minutes = (totalSeconds % 3600) / 60,
+                        seconds = totalSeconds % 60,
                         isFinished = false
                     )
                 }
-
                 delay(1000L)
             }
         }

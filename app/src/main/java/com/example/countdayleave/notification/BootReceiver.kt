@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Re-schedule daily alarm sau khi thiết bị khởi động lại.
- * AlarmManager bị xóa sau reboot, receiver này phục hồi lại.
+ * Re-schedule tất cả alarm sau khi thiết bị khởi động lại.
+ * AlarmManager bị xóa sau reboot, receiver này phục hồi lại cho mọi sự kiện.
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -22,9 +22,10 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
-                val config = CountdownDataStore(context).configFlow.first()
-                if (config != null && config.notifyEnabled) {
-                    NotificationScheduler(context).schedule(config)
+                val events = CountdownDataStore(context).eventsFlow.first()
+                val scheduler = NotificationScheduler(context)
+                events.filter { it.notifyEnabled }.forEach { config ->
+                    scheduler.schedule(config)
                 }
             } finally {
                 pendingResult.finish()

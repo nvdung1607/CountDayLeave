@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -27,7 +28,8 @@ import com.example.countdayleave.ui.theme.*
 fun CelebrationScreen(
     milestoneName: String,
     onSetupNew: () -> Unit,
-    onNavigateToSetup: () -> Unit
+    onNavigateToSetup: () -> Unit,
+    onBack: () -> Unit
 ) {
     // Emoji bounce animation
     val infiniteTransition = rememberInfiniteTransition(label = "bounce")
@@ -49,17 +51,35 @@ fun CelebrationScreen(
         // Fireworks layer
         FireworksCanvas(modifier = Modifier.fillMaxSize())
 
-        // Settings button (top right)
+        // Top Buttons (Back and Settings)
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(20.dp),
-            contentAlignment = Alignment.TopEnd
+                .padding(20.dp)
         ) {
+            // Back button (top left)
+            IconButton(
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.surfaceCard.copy(alpha = 0.8f))
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowBackIosNew,
+                    contentDescription = "Quay lại",
+                    tint = AppTheme.colors.textSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            // Settings button (top right)
             IconButton(
                 onClick = onNavigateToSetup,
                 modifier = Modifier
+                    .align(Alignment.TopEnd)
                     .size(42.dp)
                     .clip(CircleShape)
                     .background(AppTheme.colors.surfaceCard.copy(alpha = 0.8f))

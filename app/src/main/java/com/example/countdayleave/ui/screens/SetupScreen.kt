@@ -43,7 +43,8 @@ fun SetupScreen(
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean
-    ) -> Unit
+    ) -> Unit,
+    onBack: () -> Unit
 ) {
     // ---- State ----
     var milestoneName by remember { mutableStateOf(initialMilestoneName) }
@@ -134,10 +135,31 @@ fun SetupScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp)
-                // Thêm padding top động để tránh vùng Status bar / rãnh camera và nav bar
                 .windowInsetsPadding(WindowInsets.systemBars),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Back button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(AppTheme.colors.surfaceCard)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ArrowBackIosNew,
+                        contentDescription = "Quay lại",
+                        tint = AppTheme.colors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
 
             // Header
             SetupHeader(isEditing = isEditing)
@@ -377,7 +399,7 @@ private fun SetupHeader(isEditing: Boolean) {
         // Icon circle
         Box(
             modifier = Modifier
-                .padding(top = 16.dp) // Thêm tí khoảng cách trên cho thông thoáng
+                .padding(top = 16.dp)
                 .size(80.dp)
                 .background(
                     Brush.radialGradient(listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd.copy(alpha = 0.3f))),
@@ -425,7 +447,6 @@ private fun PickerCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    // Để nội dung nằm ngang căn giữa -> sử dụng Modifier.fillMaxWidth() và AlignmentCenter trên Column
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))

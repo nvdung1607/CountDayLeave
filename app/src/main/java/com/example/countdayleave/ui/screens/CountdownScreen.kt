@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,7 +29,8 @@ import java.util.*
 @Composable
 fun CountdownScreen(
     uiState: CountdownUiState,
-    onNavigateToSetup: () -> Unit
+    onNavigateToSetup: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     val notifyEnabled = uiState.notifyEnabled
     Box(
@@ -60,8 +62,11 @@ fun CountdownScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top bar
-            TopBar(onSettingsClick = onNavigateToSetup)
+            // Top bar with back button
+            TopBar(
+                onBackClick = onNavigateBack,
+                onSettingsClick = onNavigateToSetup
+            )
 
             Spacer(Modifier.weight(0.5f))
 
@@ -110,9 +115,12 @@ fun CountdownScreen(
     }
 }
 
-// ---- Top bar ----
+// ---- Top bar with back ----
 @Composable
-private fun TopBar(onSettingsClick: () -> Unit) {
+private fun TopBar(
+    onBackClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -120,6 +128,22 @@ private fun TopBar(onSettingsClick: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Back button
+        IconButton(
+            onClick = onBackClick,
+            modifier = Modifier
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(AppTheme.colors.surfaceCard)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.ArrowBackIosNew,
+                contentDescription = "Quay lại",
+                tint = AppTheme.colors.textSecondary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
         Text(
             "CountDown",
             color = AppTheme.colors.accentPurpleLight,
@@ -127,6 +151,8 @@ private fun TopBar(onSettingsClick: () -> Unit) {
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp
         )
+
+        // Settings button
         IconButton(
             onClick = onSettingsClick,
             modifier = Modifier
@@ -169,17 +195,13 @@ private fun CountdownGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CountdownCard(value = days,    label = "NGÀY",  modifier = Modifier.weight(1f), isMain = true)
-            CountdownCard(value = hours,   label = "GIỜ",   modifier = Modifier.weight(1f), isMain = true)
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true)
+            CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true)
         }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CountdownCard(value = minutes, label = "PHÚT",  modifier = Modifier.weight(1f))
-            CountdownCard(value = seconds, label = "GIÂY",  modifier = Modifier.weight(1f), isSeconds = true)
+        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f))
+            CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true)
         }
     }
 }
@@ -203,11 +225,6 @@ private fun CountdownCard(
         Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.25f), AppTheme.colors.gradientEnd.copy(alpha = 0.15f)))
     else
         Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
-
-    val borderBrush = if (isMain)
-        Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.5f), AppTheme.colors.gradientEnd.copy(alpha = 0.5f)))
-    else
-        Brush.linearGradient(listOf(AppTheme.colors.surfaceElevated, AppTheme.colors.surfaceElevated))
 
     Box(
         modifier = modifier
@@ -234,7 +251,6 @@ private fun CountdownCard(
                 .padding(vertical = if (isMain) 28.dp else 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Animated number
             AnimatedContent(
                 targetState = String.format("%02d", animatedValue),
                 transitionSpec = {

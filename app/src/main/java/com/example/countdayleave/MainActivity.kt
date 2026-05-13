@@ -16,18 +16,24 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.countdayleave.notification.DailyNotificationReceiver.Companion.CHANNEL_ID
+import com.example.countdayleave.notification.NotificationScheduler
 import com.example.countdayleave.ui.screens.CelebrationScreen
 import com.example.countdayleave.ui.screens.CountdownScreen
+import com.example.countdayleave.ui.screens.EventListScreen
 import com.example.countdayleave.ui.screens.SetupScreen
 import com.example.countdayleave.ui.theme.CountDayLeaveTheme
 import com.example.countdayleave.viewmodel.CountdownViewModel
+import com.example.countdayleave.viewmodel.EventListViewModel
 
 // ---- Navigation routes ----
 object Routes {
+    const val EVENT_LIST  = "event_list"
     const val SETUP       = "setup"
     const val COUNTDOWN   = "countdown"
     const val CELEBRATION = "celebration"
@@ -58,21 +64,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             CountDayLeaveTheme {
                 AppNavigation(
-                    startDestination = resolveStartDestination()
+                    intentAction = intent?.action,
+                    intentEventId = intent?.getStringExtra(NotificationScheduler.EXTRA_EVENT_ID)
                 )
             }
-        }
-    }
-
-    /**
-     * Nếu notification tap với action "celebration", mở thẳng CelebrationScreen.
-     * Nếu action "countdown", mở CountdownScreen.
-     */
-    private fun resolveStartDestination(): String {
-        return when (intent?.action) {
-            "celebration" -> Routes.CELEBRATION
-            "countdown"   -> Routes.COUNTDOWN
-            else          -> Routes.COUNTDOWN   // ViewModel sẽ navigate đúng màn hình
         }
     }
 
@@ -91,77 +86,142 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppNavigation(
-    startDestination: String,
+    intentAction: String?,
+    intentEventId: String?,
     navController: NavHostController = rememberNavController()
 ) {
-    val viewModel: CountdownViewModel = viewModel()
-    val uiState by viewModel.uiState.collectAsState()
-
-    // Observe loading finish → navigate to correct screen
-    LaunchedEffect(uiState.isLoading) {
-        if (!uiState.isLoading && !uiState.isConfigured) {
-            navController.navigate(Routes.SETUP) {
-                popUpTo(0) { inclusive = true }
-            }
-        }
-    }
-
-    // Auto-navigate to CelebrationScreen when countdown finishes
-    LaunchedEffect(uiState.isFinished) {
-        if (uiState.isFinished && uiState.isConfigured) {
-            navController.navigate(Routes.CELEBRATION) {
-                popUpTo(Routes.COUNTDOWN) { inclusive = true }
+    // Handle deep link logic from notification
+    LaunchedEffect(intentAction, intentEventId) {
+        if (intentEventId != null) {
+            when (intentAction) {
+                "celebration" -> {
+                    navController.navigate("${Routes.CELEBRATION}/$intentEventId") {
+                        popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                    }
+                }
+                "countdown" -> {
+                    navController.navigate("${Routes.COUNTDOWN}/$intentEventId") {
+                        popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                    }
+                }
             }
         }
     }
 
     NavHost(
         navController = navController,
-        startDestination = if (startDestination == Routes.CELEBRATION) Routes.CELEBRATION else Routes.COUNTDOWN,
+        startDestination = Routes.EVENT_LIST,
         modifier = Modifier.fillMaxSize()
     ) {
-        // ---- Setup screen ----
-        composable(Routes.SETUP) {
-            SetupScreen(
-                initialMilestoneName  = uiState.milestoneName,
-                initialTargetMillis   = if (uiState.targetEpochMillis > 0) uiState.targetEpochMillis else null,
-                initialNotifyTimes    = uiState.notifyTimes,
-                initialNotifyEnabled  = uiState.notifyEnabled,
-                isEditing             = uiState.isConfigured,
-                onSave = { name, targetMillis, notifyTimes, notifyEnabled ->
-                    viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled)
-                    navController.navigate(Routes.COUNTDOWN) {
-                        popUpTo(Routes.SETUP) { inclusive = true }
-                    }
+        // ---- Event List Screen ----
+        composable(Routes.EVENT_LIST) {
+            val listViewModel: EventListViewModel = viewModel()
+            val events by listViewModel.events.collectAsState()
+            
+            EventListScreen(
+                events = events,
+                onEventClick = { eventId ->
+                    navController.navigate("${Routes.COUNTDOWN}/$eventId")
+                },
+                onAddEvent = {
+                    navController.navigate(Routes.SETUP)
+                },
+                onDeleteEvent = { eventId ->
+                    listViewModel.deleteEvent(eventId)
                 }
             )
         }
 
-        // ---- Countdown screen ----
-        composable(Routes.COUNTDOWN) {
+        // ---- Setup Screen (Add/Edit) ----
+        composable(
+            route = "${Routes.SETUP}?eventId={eventId}",
+            arguments = listOf(navArgument("eventId") { nullable = true; defaultValue = null })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId")
+            val viewModel: CountdownViewModel = viewModel(key = eventId ?: "new_event")
+            val uiState by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(eventId) {
+                if (eventId != null) {
+                    viewModel.loadEvent(eventId)
+                }
+            }
+
+            SetupScreen(
+                initialMilestoneName = uiState.milestoneName,
+                initialTargetMillis = if (uiState.targetEpochMillis > 0) uiState.targetEpochMillis else null,
+                initialNotifyTimes = uiState.notifyTimes,
+                initialNotifyEnabled = uiState.notifyEnabled,
+                isEditing = eventId != null,
+                onSave = { name, targetMillis, notifyTimes, notifyEnabled ->
+                    viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled)
+                    navController.popBackStack()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // ---- Countdown screen (Details) ----
+        composable(
+            route = "${Routes.COUNTDOWN}/{eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            val viewModel: CountdownViewModel = viewModel(key = eventId)
+            val uiState by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(eventId) {
+                viewModel.loadEvent(eventId)
+            }
+
+            // Auto-navigate to CelebrationScreen when countdown finishes
+            LaunchedEffect(uiState.isFinished) {
+                if (uiState.isFinished && uiState.eventId.isNotEmpty()) {
+                    navController.navigate("${Routes.CELEBRATION}/${uiState.eventId}") {
+                        popUpTo("${Routes.COUNTDOWN}/${uiState.eventId}") { inclusive = true }
+                    }
+                }
+            }
+
             CountdownScreen(
                 uiState = uiState,
                 onNavigateToSetup = {
-                    navController.navigate(Routes.SETUP) {
-                        popUpTo(Routes.COUNTDOWN) { inclusive = false }
-                    }
+                    navController.navigate("${Routes.SETUP}?eventId=$eventId")
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
 
         // ---- Celebration screen ----
-        composable(Routes.CELEBRATION) {
+        composable(
+            route = "${Routes.CELEBRATION}/{eventId}",
+            arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            val viewModel: CountdownViewModel = viewModel(key = eventId)
+            val uiState by viewModel.uiState.collectAsState()
+
+            LaunchedEffect(eventId) {
+                viewModel.loadEvent(eventId)
+            }
+
             CelebrationScreen(
                 milestoneName = uiState.milestoneName,
                 onSetupNew = {
-                    viewModel.resetConfig()
-                    navController.navigate(Routes.SETUP) {
+                    navController.navigate(Routes.EVENT_LIST) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
                 onNavigateToSetup = {
-                    navController.navigate(Routes.SETUP) {
-                        popUpTo(Routes.CELEBRATION) { inclusive = false }
+                    navController.navigate("${Routes.SETUP}?eventId=$eventId")
+                },
+                onBack = {
+                    navController.navigate(Routes.EVENT_LIST) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

@@ -19,18 +19,26 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
     companion object {
         const val CHANNEL_ID = "countdown_channel"
-        const val NOTIFICATION_ID = 1
-        // Intent action để mở CelebrationScreen
+        const val EXTRA_EVENT_ID = "event_id"
         const val ACTION_OPEN_CELEBRATION = "com.example.countdayleave.OPEN_CELEBRATION"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        // Sử dụng goAsync để chạy coroutine từ BroadcastReceiver
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
             try {
+                val eventId = intent.getStringExtra(EXTRA_EVENT_ID)
+
                 val dataStore = CountdownDataStore(context)
-                val config = dataStore.configFlow.first()
+                val allEvents = dataStore.eventsFlow.first()
+
+                // Tìm đúng event cần thông báo
+                val config = if (eventId != null) {
+                    allEvents.find { it.id == eventId }
+                } else {
+                    // Fallback: lấy event đầu tiên (backward compat)
+                    allEvents.firstOrNull()
+                }
 
                 if (config == null || !config.notifyEnabled) {
                     pendingResult.finish()
@@ -65,9 +73,12 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                     )
                 }
 
-                sendNotification(context, title, body, tapAction)
+                // Notification ID dựa theo eventId để mỗi sự kiện có notification riêng
+                val notificationId = config.id.hashCode() and 0x7FFFFFFF
 
-                // Tính toán và schedule alarm cho thời điểm kế tiếp
+                sendNotification(context, title, body, tapAction, config.id, notificationId)
+
+                // Re-schedule alarm cho lần tiếp theo
                 val scheduler = NotificationScheduler(context)
                 scheduler.schedule(config)
 
@@ -81,16 +92,18 @@ class DailyNotificationReceiver : BroadcastReceiver() {
         context: Context,
         title: String,
         body: String,
-        tapAction: String
+        tapAction: String,
+        eventId: String,
+        notificationId: Int
     ) {
-        // Tap notification → mở MainActivity với deep-link action
         val tapIntent = Intent(context, MainActivity::class.java).apply {
             action = tapAction
+            putExtra(NotificationScheduler.EXTRA_EVENT_ID, eventId)
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val tapPendingIntent = PendingIntent.getActivity(
             context,
-            0,
+            notificationId,
             tapIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -106,6 +119,6 @@ class DailyNotificationReceiver : BroadcastReceiver() {
             .build()
 
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        nm.notify(NOTIFICATION_ID, notification)
+        nm.notify(notificationId, notification)
     }
 }

@@ -10,28 +10,25 @@ import java.util.Calendar
 class NotificationScheduler(private val context: Context) {
 
     companion object {
-        const val REQUEST_CODE = 1001
+        const val EXTRA_EVENT_ID = "event_id"
+        // Base request code — mỗi event dùng hashCode của eventId làm request code riêng
     }
 
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     /**
-     * Đặt một alarm one-shot (setExactAndAllowWhileIdle) vào giờ gần nhất trong [config.notifyTimes].
-     * Khi alarm kích hoạt, [DailyNotificationReceiver] sẽ gửi thông báo rồi tự gọi [schedule] lại
-     * để đặt alarm cho ngày hôm sau → mô phỏng alarm lặp lại hằng ngày.
-     * Sử dụng setExactAndAllowWhileIdle để alarm hoạt động ngay cả khi máy ở chế độ Doze.
+     * Đặt alarm cho một sự kiện cụ thể.
+     * Mỗi sự kiện có PendingIntent riêng biệt theo eventId.
      */
     fun schedule(config: CountdownConfig) {
-        val intent = buildIntent()
-        // Huỷ alarm cũ nếu có
+        val intent = buildIntent(config.id)
         alarmManager.cancel(intent)
 
-        if (config.notifyTimes.isEmpty()) return
+        if (!config.notifyEnabled || config.notifyTimes.isEmpty()) return
 
-        val nextTimes = config.notifyTimes.map { 
-            nextTriggerTime(it.hour, it.minute)
-        }
-        val triggerTime = nextTimes.minOrNull() ?: return
+        val triggerTime = config.notifyTimes
+            .map { nextTriggerTime(it.hour, it.minute) }
+            .minOrNull() ?: return
 
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
@@ -40,34 +37,38 @@ class NotificationScheduler(private val context: Context) {
         )
     }
 
-    /** Huỷ alarm đang đặt. */
-    fun cancel() {
-        alarmManager.cancel(buildIntent())
+    /** Huỷ alarm của một sự kiện cụ thể theo eventId. */
+    fun cancel(eventId: String) {
+        alarmManager.cancel(buildIntent(eventId))
     }
 
-    private fun buildIntent(): PendingIntent {
-        val intent = Intent(context, DailyNotificationReceiver::class.java)
+    /** Huỷ tất cả alarm của một danh sách sự kiện. */
+    fun cancelAll(eventIds: List<String>) {
+        eventIds.forEach { cancel(it) }
+    }
+
+    private fun buildIntent(eventId: String): PendingIntent {
+        val intent = Intent(context, DailyNotificationReceiver::class.java).apply {
+            putExtra(EXTRA_EVENT_ID, eventId)
+        }
+        // Request code dựa trên hashCode của eventId để mỗi sự kiện có PendingIntent độc lập
+        val requestCode = eventId.hashCode() and 0x7FFFFFFF
         return PendingIntent.getBroadcast(
             context,
-            REQUEST_CODE,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
-    private fun nextTriggerTime(
-        hour: Int,
-        minute: Int,
-        forceNextDay: Boolean = false
-    ): Long {
+    private fun nextTriggerTime(hour: Int, minute: Int): Long {
         val cal = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        // Nếu giờ đã qua trong ngày hôm nay (hoặc force next day), dời sang ngày mai
-        if (forceNextDay || cal.timeInMillis <= System.currentTimeMillis()) {
+        if (cal.timeInMillis <= System.currentTimeMillis()) {
             cal.add(Calendar.DAY_OF_YEAR, 1)
         }
         return cal.timeInMillis
