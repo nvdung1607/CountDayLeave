@@ -34,7 +34,8 @@ fun EventListScreen(
     events: List<CountdownConfig>,
     onEventClick: (eventId: String) -> Unit,
     onAddEvent: () -> Unit,
-    onDeleteEvent: (eventId: String) -> Unit
+    onDeleteEvent: (eventId: String) -> Unit,
+    onAdminClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -62,7 +63,7 @@ fun EventListScreen(
                 .windowInsetsPadding(WindowInsets.systemBars)
         ) {
             // ---- Top Bar ----
-            EventListTopBar()
+            EventListTopBar(onAdminClick = onAdminClick)
 
             if (events.isEmpty()) {
                 // ---- Empty state ----
@@ -126,7 +127,8 @@ fun EventListScreen(
 }
 
 @Composable
-private fun EventListTopBar() {
+private fun EventListTopBar(onAdminClick: () -> Unit) {
+    var tapCount by remember { mutableStateOf(0) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,7 +164,18 @@ private fun EventListTopBar() {
 
         Spacer(Modifier.width(16.dp))
 
-        Column {
+        Column(
+            modifier = Modifier.clickable(
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                indication = null
+            ) {
+                tapCount++
+                if (tapCount >= 16) {
+                    tapCount = 0
+                    onAdminClick()
+                }
+            }
+        ) {
             Text(
                 text = "CountDown",
                 style = MaterialTheme.typography.headlineLarge.copy(

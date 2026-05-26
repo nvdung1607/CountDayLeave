@@ -37,6 +37,7 @@ object Routes {
     const val SETUP       = "setup"
     const val COUNTDOWN   = "countdown"
     const val CELEBRATION = "celebration"
+    const val ADMIN       = "admin"
 }
 
 class MainActivity : ComponentActivity() {
@@ -128,7 +129,17 @@ fun AppNavigation(
                 },
                 onDeleteEvent = { eventId ->
                     listViewModel.deleteEvent(eventId)
+                },
+                onAdminClick = {
+                    navController.navigate(Routes.ADMIN)
                 }
+            )
+        }
+
+        // ---- Admin Panel Screen ----
+        composable(Routes.ADMIN) {
+            com.example.countdayleave.ui.screens.AdminScreen(
+                onBack = { navController.popBackStack() }
             )
         }
 
