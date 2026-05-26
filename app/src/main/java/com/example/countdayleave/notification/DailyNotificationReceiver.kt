@@ -62,14 +62,14 @@ class DailyNotificationReceiver : BroadcastReceiver() {
 
                     val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay(context)
                     Triple(
-                        "Đếm ngược sự kiện ⏳",
-                        "${config.milestoneName}: Còn $timeText nữa thôi!\n💡 \"$quote\"",
+                        "${config.milestoneName}: Còn $timeText",
+                        "💡 \"$quote\"",
                         "countdown"
                     )
                 } else {
                     Triple(
-                        "Đã đến ngày mục tiêu 🎉",
-                        "${config.milestoneName}: Đã đến hạn rồi!",
+                        "${config.milestoneName}: Đã đến hạn rồi! 🎉",
+                        "Chúc mừng bạn đã hoàn thành mục tiêu!",
                         "celebration"
                     )
                 }
