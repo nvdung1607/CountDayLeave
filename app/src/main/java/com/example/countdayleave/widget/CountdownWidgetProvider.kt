@@ -48,11 +48,12 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                 val views = RemoteViews(context.packageName, R.layout.countdown_widget)
                 val eventId = WidgetConfigureActivity.getWidgetConfig(context, appWidgetId)
 
-                if (eventId == null) {
+                 if (eventId == null) {
                     views.setTextViewText(R.id.widget_title, "Chưa cấu hình")
                     views.setTextViewText(R.id.widget_days, "--")
                     views.setTextViewText(R.id.widget_days_label, "NHẤP ĐỂ THIẾT LẬP")
                     views.setTextViewText(R.id.widget_target_date, "")
+                    views.setTextViewText(R.id.widget_quote, "")
                     appWidgetManager.updateAppWidget(appWidgetId, views)
                     return@launch
                 }
@@ -67,6 +68,7 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_days, "N/A")
                     views.setTextViewText(R.id.widget_days_label, "XÓA WIDGET NÀY")
                     views.setTextViewText(R.id.widget_target_date, "")
+                    views.setTextViewText(R.id.widget_quote, "")
                     appWidgetManager.updateAppWidget(appWidgetId, views)
                     return@launch
                 }
@@ -85,6 +87,8 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                 val targetDateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     .format(Date(event.targetEpochMillis))
 
+                val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay()
+
                 // Cập nhật text hiển thị
                 views.setTextViewText(R.id.widget_title, event.milestoneName)
                 if (daysLeft > 0) {
@@ -95,6 +99,7 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_days_label, "ĐÃ ĐẾN NGÀY")
                 }
                 views.setTextViewText(R.id.widget_target_date, "🎯 $targetDateStr")
+                views.setTextViewText(R.id.widget_quote, "“$quote”")
 
                 // Cấu hình Intent khi click vào widget: Mở trực tiếp màn đếm ngược của sự kiện này
                 val intent = Intent(context, MainActivity::class.java).apply {

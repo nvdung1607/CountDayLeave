@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -104,7 +105,8 @@ fun CountdownScreen(
             Spacer(Modifier.height(32.dp))
 
             // Motivation Quote Card
-            val quote = remember { com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay() }
+            var quoteIndex by remember { mutableStateOf(com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex()) }
+            val quote = remember(quoteIndex) { com.example.countdayleave.data.QuoteRepository.getQuote(quoteIndex) }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,10 +125,24 @@ fun CountdownScreen(
                     )
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(
+                        onClick = { quoteIndex = (quoteIndex - 1 + com.example.countdayleave.data.QuoteRepository.getQuotesCount()) % com.example.countdayleave.data.QuoteRepository.getQuotesCount() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowBackIosNew,
+                            contentDescription = "Quote trước",
+                            tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
                     Text(
                         text = buildAnnotatedString {
                             withStyle(
@@ -150,13 +166,27 @@ fun CountdownScreen(
                             }
                         },
                         color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
-                        fontSize = 14.sp,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         fontStyle = FontStyle.Italic,
                         textAlign = TextAlign.Center,
-                        lineHeight = 22.sp,
-                        modifier = Modifier.padding(horizontal = 8.dp)
+                        lineHeight = 20.sp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp)
                     )
+
+                    IconButton(
+                        onClick = { quoteIndex = (quoteIndex + 1) % com.example.countdayleave.data.QuoteRepository.getQuotesCount() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ArrowForwardIos,
+                            contentDescription = "Quote sau",
+                            tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
             }
 

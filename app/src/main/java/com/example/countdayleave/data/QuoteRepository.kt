@@ -33,16 +33,63 @@ object QuoteRepository {
         "Mỗi ngày trôi qua là một trang sách mới, hãy viết lên đó những điều tuyệt vời nhất.",
         "Chiến thắng bản thân là chiến thắng hiển hách nhất.",
         "Đừng đếm những ngày đã trôi qua, hãy làm cho những ngày trôi qua có ý nghĩa.",
-        "Sự chuẩn bị tốt nhất cho ngày mai là làm thật tốt công việc của ngày hôm nay."
+        "Sự chuẩn bị tốt nhất cho ngày mai là làm thật tốt công việc của ngày hôm nay.",
+        "Không bao giờ là quá muộn để bắt đầu xây dựng ước mơ của mình.",
+        "Thái độ của bạn quyết định sự cao lớn của bạn.",
+        "Cuộc sống không phải là để tìm kiếm bản thân, mà là để tự tạo ra bản thân.",
+        "Đừng để ngày hôm qua chiếm quá nhiều thời gian của ngày hôm nay.",
+        "Sự khác biệt giữa người thành công và những người khác không phải là sự thiếu sức mạnh, thiếu kiến thức, mà là thiếu ý chí.",
+        "Nếu bạn muốn đạt được những điều chưa từng có, hãy sẵn sàng làm những điều chưa từng làm.",
+        "Học từ hôm qua, sống cho hôm nay, hy vọng cho ngày mai.",
+        "Đừng bao giờ để nỗi sợ thất bại lớn hơn niềm vui chiến thắng.",
+        "Không có con đường nào bằng phẳng để dẫn tới thành công, bạn phải tự mở đường cho chính mình.",
+        "Hãy tin tưởng vào chính mình, bạn mạnh mẽ hơn bạn nghĩ rất nhiều.",
+        "Nơi nào có ý chí, nơi đó có con đường.",
+        "Hãy làm việc trong im lặng và để sự thành công của bạn lên tiếng.",
+        "Hãy luôn hướng về phía mặt trời, bóng tối sẽ ngả về sau lưng bạn.",
+        "Để thành công, khát khao thành công của bạn phải lớn hơn nỗi sợ thất bại.",
+        "Mỗi ngày mới mang theo sức mạnh mới và suy nghĩ mới.",
+        "Chỉ có những người dám thất bại lớn mới có thể đạt được những thành công lớn.",
+        "Đừng cầu nguyện cho một cuộc sống dễ dàng, hãy cầu nguyện cho có sức mạnh để chịu đựng một cuộc sống khó khăn.",
+        "Tương lai thuộc về những ai tin vào vẻ đẹp của những giấc mơ.",
+        "Thời gian của bạn là có hạn, vì vậy đừng lãng phí nó để sống cuộc đời của người khác.",
+        "Thành công là tổng hợp của những nỗ lực nhỏ bé, lặp đi lặp lại ngày này qua ngày khác.",
+        "Cách duy nhất để làm một công việc tuyệt vời là yêu thích việc bạn làm.",
+        "Hãy tự tin tiến về phía ước mơ của bạn, sống cuộc đời mà bạn hằng mong ước.",
+        "Đừng bao giờ từ bỏ ước mơ chỉ vì thời gian để hoàn thành nó quá dài. Thời gian rồi cũng sẽ trôi đi thôi."
     )
 
     /**
      * Lấy câu quote của ngày hôm nay (thay đổi theo ngày).
      */
     fun getQuoteOfTheDay(): String {
+        val index = getQuoteOfTheDayIndex()
+        return quotes[index]
+    }
+
+    /**
+     * Lấy chỉ số quote của ngày hôm nay.
+     */
+    fun getQuoteOfTheDayIndex(): Int {
         val calendar = Calendar.getInstance()
         val dayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-        val index = dayOfYear % quotes.size
-        return quotes[index]
+        return dayOfYear % quotes.size
+    }
+
+    /**
+     * Lấy câu quote theo index.
+     */
+    fun getQuote(index: Int): String {
+        if (quotes.isEmpty()) return ""
+        // Tránh index âm hoặc tràn
+        val safeIndex = ((index % quotes.size) + quotes.size) % quotes.size
+        return quotes[safeIndex]
+    }
+
+    /**
+     * Lấy tổng số lượng câu quote.
+     */
+    fun getQuotesCount(): Int {
+        return quotes.size
     }
 }
