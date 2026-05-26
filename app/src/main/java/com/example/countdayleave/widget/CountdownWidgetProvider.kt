@@ -87,7 +87,13 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                 val targetDateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     .format(Date(event.targetEpochMillis))
 
-                val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay()
+                val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                val customQuoteIndex = prefs.getInt("selected_quote_$eventId", -1)
+                val quote = if (customQuoteIndex != -1) {
+                    com.example.countdayleave.data.QuoteRepository.getQuote(customQuoteIndex)
+                } else {
+                    com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay()
+                }
 
                 // Cập nhật text hiển thị
                 views.setTextViewText(R.id.widget_title, event.milestoneName)

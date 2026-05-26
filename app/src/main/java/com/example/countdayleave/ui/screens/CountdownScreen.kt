@@ -105,7 +105,13 @@ fun CountdownScreen(
             Spacer(Modifier.height(32.dp))
 
             // Motivation Quote Card
-            var quoteIndex by remember { mutableStateOf(com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex()) }
+            val context = androidx.compose.ui.platform.LocalContext.current
+            var quoteIndex by remember(uiState.eventId) {
+                mutableStateOf(
+                    context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                        .getInt("selected_quote_${uiState.eventId}", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex())
+                )
+            }
             val quote = remember(quoteIndex) { com.example.countdayleave.data.QuoteRepository.getQuote(quoteIndex) }
             Card(
                 modifier = Modifier
@@ -128,11 +134,19 @@ fun CountdownScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(vertical = 16.dp, horizontal = 4.dp), // Pushes buttons closer to edges
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(
-                        onClick = { quoteIndex = (quoteIndex - 1 + com.example.countdayleave.data.QuoteRepository.getQuotesCount()) % com.example.countdayleave.data.QuoteRepository.getQuotesCount() },
+                        onClick = {
+                            val newIndex = (quoteIndex - 1 + com.example.countdayleave.data.QuoteRepository.getQuotesCount()) % com.example.countdayleave.data.QuoteRepository.getQuotesCount()
+                            quoteIndex = newIndex
+                            context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                                .edit()
+                                .putInt("selected_quote_${uiState.eventId}", newIndex)
+                                .apply()
+                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(context, uiState.eventId)
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
@@ -148,7 +162,7 @@ fun CountdownScreen(
                             withStyle(
                                 style = SpanStyle(
                                     color = AppTheme.colors.accentPurpleLight,
-                                    fontSize = 18.sp,
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             ) {
@@ -158,7 +172,7 @@ fun CountdownScreen(
                             withStyle(
                                 style = SpanStyle(
                                     color = AppTheme.colors.accentPurpleLight,
-                                    fontSize = 18.sp,
+                                    fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             ) {
@@ -166,18 +180,26 @@ fun CountdownScreen(
                             }
                         },
                         color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
-                        fontSize = 13.sp,
+                        fontSize = 15.sp, // Larger quote size
                         fontWeight = FontWeight.Medium,
                         fontStyle = FontStyle.Italic,
                         textAlign = TextAlign.Center,
-                        lineHeight = 20.sp,
+                        lineHeight = 22.sp,
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp)
+                            .padding(horizontal = 4.dp)
                     )
 
                     IconButton(
-                        onClick = { quoteIndex = (quoteIndex + 1) % com.example.countdayleave.data.QuoteRepository.getQuotesCount() },
+                        onClick = {
+                            val newIndex = (quoteIndex + 1) % com.example.countdayleave.data.QuoteRepository.getQuotesCount()
+                            quoteIndex = newIndex
+                            context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                                .edit()
+                                .putInt("selected_quote_${uiState.eventId}", newIndex)
+                                .apply()
+                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(context, uiState.eventId)
+                        },
                         modifier = Modifier.size(32.dp)
                     ) {
                         Icon(

@@ -9,9 +9,10 @@
     <color name="background_dark_light">#FFFFFFFF</color>
 
     <!-- Widget Colors (Light Mode) -->
-    <color name="widget_background">#FFFFFFFF</color>
+    <color name="widget_bg_start">#FFFFFFFF</color>
+    <color name="widget_bg_end">#FFF1F5F9</color>
     <color name="widget_stroke">#FFE2E8F0</color>
-    <color name="widget_text_primary">#FF1A202C</color>
-    <color name="widget_text_secondary">#FF718096</color>
-    <color name="widget_text_accent">#FF7C6FF7</color>
+    <color name="widget_text_primary">#FF0F172A</color>
+    <color name="widget_text_secondary">#FF475569</color>
+    <color name="widget_text_accent">#FF6366F1</color>
 </resources>
