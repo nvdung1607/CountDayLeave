@@ -97,6 +97,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 )
             }
             if (notifyEnabled) scheduler.schedule(config) else scheduler.cancel(currentId)
+            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(getApplication(), currentId)
             startTimer()
         }
     }
@@ -109,6 +110,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
             if (id.isNotBlank()) {
                 scheduler.cancel(id)
                 dataStore.deleteEvent(id)
+                com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(getApplication(), id)
             }
             _uiState.update { CountdownUiState(isLoading = false) }
         }

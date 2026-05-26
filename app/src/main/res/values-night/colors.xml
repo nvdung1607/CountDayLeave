@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Widget Colors (Dark Mode Override) -->
+    <color name="widget_background">#FF1A0D2E</color>
+    <color name="widget_stroke">#FF3D2B5C</color>
+    <color name="widget_text_primary">#FFFFFFFF</color>
+    <color name="widget_text_secondary">#FF9E9E9E</color>
+    <color name="widget_text_accent">#FFBB86FC</color>
+</resources>

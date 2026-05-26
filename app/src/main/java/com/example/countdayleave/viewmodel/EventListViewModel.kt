@@ -33,6 +33,7 @@ class EventListViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             scheduler.cancel(eventId)
             dataStore.deleteEvent(eventId)
+            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(getApplication(), eventId)
         }
     }
 }

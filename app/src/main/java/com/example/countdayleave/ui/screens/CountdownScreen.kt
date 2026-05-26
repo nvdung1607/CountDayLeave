@@ -17,6 +17,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -96,6 +100,65 @@ fun CountdownScreen(
                 minutes = uiState.minutes,
                 seconds = uiState.seconds
             )
+
+            Spacer(Modifier.height(32.dp))
+
+            // Motivation Quote Card
+            val quote = remember { com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay() }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp,
+                    Brush.linearGradient(
+                        colors = listOf(
+                            AppTheme.colors.gradientStart.copy(alpha = 0.2f),
+                            AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(
+                                style = SpanStyle(
+                                    color = AppTheme.colors.accentPurpleLight,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
+                                append("“ ")
+                            }
+                            append(quote)
+                            withStyle(
+                                style = SpanStyle(
+                                    color = AppTheme.colors.accentPurpleLight,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            ) {
+                                append(" ”")
+                            }
+                        },
+                        color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontStyle = FontStyle.Italic,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 22.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
+            }
 
             Spacer(Modifier.weight(1f))
 
