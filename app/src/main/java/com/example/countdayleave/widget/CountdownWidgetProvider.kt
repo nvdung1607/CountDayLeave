@@ -90,9 +90,9 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                 val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
                 val customQuoteIndex = prefs.getInt("selected_quote_$eventId", -1)
                 val quote = if (customQuoteIndex != -1) {
-                    com.example.countdayleave.data.QuoteRepository.getQuote(customQuoteIndex)
+                    com.example.countdayleave.data.QuoteRepository.getQuote(context, customQuoteIndex)
                 } else {
-                    com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay()
+                    com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay(context)
                 }
 
                 // Cập nhật text hiển thị

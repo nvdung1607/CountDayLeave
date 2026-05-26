@@ -104,15 +104,15 @@ fun CountdownScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // Motivation Quote Card
+             // Motivation Quote Card
             val context = androidx.compose.ui.platform.LocalContext.current
             var quoteIndex by remember(uiState.eventId) {
                 mutableStateOf(
                     context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
-                        .getInt("selected_quote_${uiState.eventId}", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex())
+                        .getInt("selected_quote_${uiState.eventId}", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
                 )
             }
-            val quote = remember(quoteIndex) { com.example.countdayleave.data.QuoteRepository.getQuote(quoteIndex) }
+            val quote = remember(quoteIndex) { com.example.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex) }
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -139,7 +139,8 @@ fun CountdownScreen(
                 ) {
                     IconButton(
                         onClick = {
-                            val newIndex = (quoteIndex - 1 + com.example.countdayleave.data.QuoteRepository.getQuotesCount()) % com.example.countdayleave.data.QuoteRepository.getQuotesCount()
+                            val count = com.example.countdayleave.data.QuoteRepository.getQuotesCount(context)
+                            val newIndex = (quoteIndex - 1 + count) % count
                             quoteIndex = newIndex
                             context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
                                 .edit()
@@ -192,7 +193,8 @@ fun CountdownScreen(
 
                     IconButton(
                         onClick = {
-                            val newIndex = (quoteIndex + 1) % com.example.countdayleave.data.QuoteRepository.getQuotesCount()
+                            val count = com.example.countdayleave.data.QuoteRepository.getQuotesCount(context)
+                            val newIndex = (quoteIndex + 1) % count
                             quoteIndex = newIndex
                             context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
                                 .edit()

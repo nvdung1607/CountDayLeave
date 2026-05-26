@@ -60,7 +60,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                         if (days == 0L && minutes > 0) append("${minutes} phút ")
                     }.trim()
 
-                    val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay()
+                    val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay(context)
                     Triple(
                         "⏳ ${config.milestoneName}",
                         "Còn $timeText nữa thôi!\n\n💡 \"$quote\"",

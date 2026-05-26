@@ -1,9 +1,11 @@
 package com.example.countdayleave.data
 
+import android.content.Context
+import org.json.JSONArray
 import java.util.Calendar
 
 object QuoteRepository {
-    private val quotes = listOf(
+    private val defaultQuotes = listOf(
         "Hành trình vạn dặm bắt đầu từ một bước chân.",
         "Đừng đợi cơ hội tự tìm đến, hãy tự tạo ra nó.",
         "Khó khăn không phải để cản bước bạn, mà để rèn luyện bạn vững vàng hơn.",
@@ -59,37 +61,93 @@ object QuoteRepository {
         "Đừng bao giờ từ bỏ ước mơ chỉ vì thời gian để hoàn thành nó quá dài. Thời gian rồi cũng sẽ trôi đi thôi."
     )
 
-    /**
-     * Lấy câu quote của ngày hôm nay (thay đổi theo ngày).
-     */
-    fun getQuoteOfTheDay(): String {
-        val index = getQuoteOfTheDayIndex()
-        return quotes[index]
+    private val quotesList = mutableListOf<String>()
+
+    fun initialize(context: Context) {
+        synchronized(this) {
+            quotesList.clear()
+            val prefs = context.getSharedPreferences("quotes_prefs", Context.MODE_PRIVATE)
+            val jsonStr = prefs.getString("custom_quotes", null)
+            if (jsonStr != null) {
+                try {
+                    val arr = JSONArray(jsonStr)
+                    for (i in 0 until arr.length()) {
+                        quotesList.add(arr.getString(i))
+                    }
+                } catch (e: Exception) {
+                    quotesList.addAll(defaultQuotes)
+                }
+            } else {
+                quotesList.addAll(defaultQuotes)
+            }
+        }
     }
 
-    /**
-     * Lấy chỉ số quote của ngày hôm nay.
-     */
-    fun getQuoteOfTheDayIndex(): Int {
+    private fun save(context: Context) {
+        val prefs = context.getSharedPreferences("quotes_prefs", Context.MODE_PRIVATE)
+        val arr = JSONArray()
+        quotesList.forEach { arr.put(it) }
+        prefs.edit().putString("custom_quotes", arr.toString()).apply()
+    }
+
+    fun getQuoteOfTheDay(context: Context): String {
+        ensureInitialized(context)
+        val index = getQuoteOfTheDayIndex(context)
+        return getQuote(context, index)
+    }
+
+    fun getQuoteOfTheDayIndex(context: Context): Int {
+        ensureInitialized(context)
         val calendar = Calendar.getInstance()
         val dayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-        return dayOfYear % quotes.size
+        return dayOfYear % quotesList.size
     }
 
-    /**
-     * Lấy câu quote theo index.
-     */
-    fun getQuote(index: Int): String {
-        if (quotes.isEmpty()) return ""
-        // Tránh index âm hoặc tràn
-        val safeIndex = ((index % quotes.size) + quotes.size) % quotes.size
-        return quotes[safeIndex]
+    fun getQuote(context: Context, index: Int): String {
+        ensureInitialized(context)
+        if (quotesList.isEmpty()) return ""
+        val safeIndex = ((index % quotesList.size) + quotesList.size) % quotesList.size
+        return quotesList[safeIndex]
     }
 
-    /**
-     * Lấy tổng số lượng câu quote.
-     */
-    fun getQuotesCount(): Int {
-        return quotes.size
+    fun getQuotesCount(context: Context): Int {
+        ensureInitialized(context)
+        return quotesList.size
+    }
+
+    fun getAllQuotes(context: Context): List<String> {
+        ensureInitialized(context)
+        return quotesList.toList()
+    }
+
+    fun addQuote(context: Context, quote: String) {
+        ensureInitialized(context)
+        quotesList.add(quote)
+        save(context)
+    }
+
+    fun editQuote(context: Context, index: Int, newQuote: String) {
+        ensureInitialized(context)
+        if (index in quotesList.indices) {
+            quotesList[index] = newQuote
+            save(context)
+        }
+    }
+
+    fun deleteQuote(context: Context, index: Int) {
+        ensureInitialized(context)
+        if (index in quotesList.indices) {
+            quotesList.removeAt(index)
+            if (quotesList.isEmpty()) {
+                quotesList.addAll(defaultQuotes)
+            }
+            save(context)
+        }
+    }
+
+    private fun ensureInitialized(context: Context) {
+        if (quotesList.isEmpty()) {
+            initialize(context)
+        }
     }
 }
