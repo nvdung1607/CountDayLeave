@@ -106,10 +106,11 @@ fun CountdownScreen(
 
              // Motivation Quote Card
             val context = androidx.compose.ui.platform.LocalContext.current
-            var quoteIndex by remember(uiState.eventId) {
+            val dateKey = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault()).format(java.util.Date()) }
+            var quoteIndex by remember(uiState.eventId, dateKey) {
                 mutableStateOf(
                     context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
-                        .getInt("selected_quote_${uiState.eventId}", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
+                        .getInt("quote_index_$dateKey", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
                 )
             }
             val quote = remember(quoteIndex) { com.example.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex) }
@@ -144,9 +145,9 @@ fun CountdownScreen(
                             quoteIndex = newIndex
                             context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
                                 .edit()
-                                .putInt("selected_quote_${uiState.eventId}", newIndex)
+                                .putInt("quote_index_$dateKey", newIndex)
                                 .apply()
-                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(context, uiState.eventId)
+                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
                         },
                         modifier = Modifier.size(32.dp)
                     ) {
@@ -198,9 +199,9 @@ fun CountdownScreen(
                             quoteIndex = newIndex
                             context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
                                 .edit()
-                                .putInt("selected_quote_${uiState.eventId}", newIndex)
+                                .putInt("quote_index_$dateKey", newIndex)
                                 .apply()
-                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(context, uiState.eventId)
+                            com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
                         },
                         modifier = Modifier.size(32.dp)
                     ) {

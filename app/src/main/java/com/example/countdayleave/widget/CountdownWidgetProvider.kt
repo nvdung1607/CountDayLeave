@@ -30,6 +30,19 @@ class CountdownWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onReceive(context: Context, intent: Intent) {
+        super.onReceive(context, intent)
+        val action = intent.action
+        if (action == Intent.ACTION_DATE_CHANGED ||
+            action == Intent.ACTION_TIME_CHANGED ||
+            action == "android.intent.action.TIME_SET" ||
+            action == Intent.ACTION_TIMEZONE_CHANGED ||
+            action == Intent.ACTION_BOOT_COMPLETED
+        ) {
+            updateAllWidgets(context)
+        }
+    }
+
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         for (appWidgetId in appWidgetIds) {
             WidgetConfigureActivity.deleteWidgetConfig(context, appWidgetId)
@@ -88,12 +101,9 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                     .format(Date(event.targetEpochMillis))
 
                 val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
-                val customQuoteIndex = prefs.getInt("selected_quote_$eventId", -1)
-                val quote = if (customQuoteIndex != -1) {
-                    com.example.countdayleave.data.QuoteRepository.getQuote(context, customQuoteIndex)
-                } else {
-                    com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay(context)
-                }
+                val dateKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+                val quoteIndex = prefs.getInt("quote_index_$dateKey", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
+                val quote = com.example.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
 
                 // Cập nhật text hiển thị
                 views.setTextViewText(R.id.widget_title, event.milestoneName)

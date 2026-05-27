@@ -60,7 +60,10 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                         if (days == 0L && minutes > 0) append("${minutes} phút ")
                     }.trim()
 
-                    val quote = com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDay(context)
+                    val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                    val dateKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+                    val quoteIndex = prefs.getInt("quote_index_$dateKey", com.example.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
+                    val quote = com.example.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
                     Triple(
                         "${config.milestoneName}: Còn $timeText",
                         "💡 \"$quote\"",
@@ -73,6 +76,9 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                         "celebration"
                     )
                 }
+
+                // Cập nhật lại Widget khi chu kỳ alarm chạy
+                com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
 
                 // Notification ID dựa theo eventId để mỗi sự kiện có notification riêng
                 val notificationId = config.id.hashCode() and 0x7FFFFFFF

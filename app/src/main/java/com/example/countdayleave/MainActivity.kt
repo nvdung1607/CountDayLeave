@@ -53,6 +53,9 @@ class MainActivity : ComponentActivity() {
         // Create notification channel (required on API 26+)
         createNotificationChannel()
 
+        // Cập nhật lại Widget khi mở ứng dụng
+        com.example.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(this)
+
         // Request POST_NOTIFICATIONS on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
