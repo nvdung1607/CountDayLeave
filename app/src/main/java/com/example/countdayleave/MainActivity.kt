@@ -142,7 +142,12 @@ fun AppNavigation(
         // ---- Admin Panel Screen ----
         composable(Routes.ADMIN) {
             com.example.countdayleave.ui.screens.AdminScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToCelebration = { eventId ->
+                    navController.navigate("${Routes.CELEBRATION}/$eventId") {
+                        popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                    }
+                }
             )
         }
 

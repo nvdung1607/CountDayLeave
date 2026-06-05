@@ -407,7 +407,12 @@ private fun SetupHeader(isEditing: Boolean) {
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(if (isEditing) "✏️" else "⏳", fontSize = 36.sp)
+            Icon(
+                imageVector = if (isEditing) Icons.Rounded.Edit else Icons.Rounded.CalendarToday,
+                contentDescription = null,
+                tint = Color.White,
+                modifier = Modifier.size(36.dp)
+            )
         }
         Spacer(Modifier.height(16.dp))
         Text(

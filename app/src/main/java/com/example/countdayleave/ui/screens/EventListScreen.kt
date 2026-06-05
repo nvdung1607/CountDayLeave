@@ -24,6 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.painterResource
+import com.example.countdayleave.R
 import com.example.countdayleave.model.CountdownConfig
 import com.example.countdayleave.ui.theme.*
 import java.text.SimpleDateFormat
@@ -65,7 +67,14 @@ fun EventListScreen(
             // ---- Top Bar ----
             EventListTopBar(onAdminClick = onAdminClick)
 
-            if (events.isEmpty()) {
+            val sortedEvents = remember(events) {
+                events.sortedWith(
+                    compareBy<CountdownConfig> { it.targetEpochMillis <= System.currentTimeMillis() }
+                        .thenBy { it.targetEpochMillis }
+                )
+            }
+
+            if (sortedEvents.isEmpty()) {
                 // ---- Empty state ----
                 EmptyState(onAddEvent = onAddEvent)
             } else {
@@ -77,7 +86,7 @@ fun EventListScreen(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    items(events, key = { it.id }) { event ->
+                    items(sortedEvents, key = { it.id }) { event ->
                         EventCard(
                             config = event,
                             onClick = { onEventClick(event.id) },
@@ -136,9 +145,11 @@ private fun EventListTopBar(onAdminClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Logo
-        Box(
+        Image(
+            painter = painterResource(id = R.drawable.app_logo),
+            contentDescription = "Count Day Leave Logo",
             modifier = Modifier
-                .size(56.dp)
+                .size(48.dp)
                 .shadow(
                     elevation = 12.dp,
                     shape = RoundedCornerShape(16.dp),
@@ -146,21 +157,7 @@ private fun EventListTopBar(onAdminClick: () -> Unit) {
                     spotColor = AppTheme.colors.gradientEnd.copy(alpha = 0.4f)
                 )
                 .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.linearGradient(
-                        listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            // Biểu tượng logo (kết hợp đồng hồ và lịch)
-            Icon(
-                imageVector = Icons.Rounded.EventAvailable,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(32.dp)
-            )
-        }
+        )
 
         Spacer(Modifier.width(16.dp))
 
@@ -177,13 +174,18 @@ private fun EventListTopBar(onAdminClick: () -> Unit) {
             }
         ) {
             Text(
-                text = "CountDown",
+                text = "Count Day Leave",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 32.sp,
-                    letterSpacing = (-1).sp,
+                    fontSize = 24.sp,
+                    letterSpacing = (-0.5).sp,
                     brush = Brush.linearGradient(
-                        listOf(AppTheme.colors.accentPurpleLight, AppTheme.colors.accentBlue)
+                        listOf(
+                            AppTheme.colors.gradientStart,
+                            AppTheme.colors.accentPurpleLight,
+                            AppTheme.colors.accentBlue,
+                            AppTheme.colors.gradientEnd
+                        )
                     )
                 )
             )
@@ -250,14 +252,17 @@ private fun EventCard(
         modifier = Modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 8.dp,
+                elevation = if (isFinished) 3.dp else 8.dp,
                 shape = RoundedCornerShape(20.dp),
                 ambientColor = if (isFinished)
-                    AppTheme.colors.gradientEnd.copy(alpha = 0.2f)
+                    Color.Transparent
                 else
                     AppTheme.colors.gradientStart.copy(alpha = 0.2f),
-                spotColor = AppTheme.colors.gradientStart.copy(alpha = 0.15f)
+                spotColor = if (isFinished) Color.Transparent else AppTheme.colors.gradientStart.copy(alpha = 0.15f)
             )
+            .graphicsLayer {
+                alpha = if (isFinished) 0.65f else 1f
+            }
             .clip(RoundedCornerShape(20.dp))
             .background(AppTheme.colors.surfaceCard)
             .clickable(onClick = onClick)
@@ -268,12 +273,10 @@ private fun EventCard(
                 .width(4.dp)
                 .fillMaxHeight()
                 .background(
-                    Brush.verticalGradient(
-                        if (isFinished)
-                            listOf(AppTheme.colors.gradientEnd, AppTheme.colors.gradientStart)
-                        else
-                            listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd)
-                    )
+                    if (isFinished)
+                        Brush.verticalGradient(listOf(Color(0xFF81C784), Color(0xFF4CAF50)))
+                    else
+                        Brush.verticalGradient(listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd))
                 )
         )
 
@@ -289,18 +292,20 @@ private fun EventCard(
                     .size(48.dp)
                     .background(
                         Brush.radialGradient(
-                            listOf(
-                                AppTheme.colors.gradientStart.copy(alpha = 0.2f),
-                                Color.Transparent
-                            )
+                            if (isFinished)
+                                listOf(Color(0xFF4CAF50).copy(alpha = 0.2f), Color.Transparent)
+                            else
+                                listOf(AppTheme.colors.gradientStart.copy(alpha = 0.2f), Color.Transparent)
                         ),
                         CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (isFinished) "🎉" else "⏳",
-                    fontSize = 24.sp
+                Icon(
+                    imageVector = if (isFinished) Icons.Rounded.Celebration else Icons.Rounded.CalendarToday,
+                    contentDescription = null,
+                    tint = if (isFinished) Color(0xFF4CAF50) else AppTheme.colors.accentPurple,
+                    modifier = Modifier.size(24.dp)
                 )
             }
 
@@ -309,7 +314,7 @@ private fun EventCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = config.milestoneName,
-                    color = AppTheme.colors.textPrimary,
+                    color = if (isFinished) AppTheme.colors.textSecondary else AppTheme.colors.textPrimary,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
@@ -326,7 +331,7 @@ private fun EventCard(
                 if (isFinished) {
                     Text(
                         text = "✅  Đã hoàn thành!",
-                        color = AppTheme.colors.gradientEnd,
+                        color = Color(0xFF4CAF50),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -400,7 +405,14 @@ private fun EmptyState(onAddEvent: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "⏳", fontSize = 72.sp, modifier = Modifier.graphicsLayer { this.alpha = alpha })
+        Icon(
+            imageVector = Icons.Rounded.CalendarMonth,
+            contentDescription = null,
+            tint = AppTheme.colors.textMuted,
+            modifier = Modifier
+                .size(72.dp)
+                .graphicsLayer { this.alpha = alpha }
+        )
         Spacer(Modifier.height(24.dp))
         Text(
             text = "Chưa có sự kiện nào",

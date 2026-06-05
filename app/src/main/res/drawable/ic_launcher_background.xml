@@ -5,18 +5,7 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Gradient background: deep purple → dark blue -->
     <path
-        android:fillColor="#FF0D0F1E"
+        android:fillColor="#FFFFFF"
         android:pathData="M0,0 L108,0 L108,108 L0,108 Z" />
-
-    <!-- Glow top-left -->
-    <path
-        android:fillColor="#206C63FF"
-        android:pathData="M0,0 A70,70 0 0,1 70,0 A70,70 0 0,1 0,70 Z" />
-
-    <!-- Glow bottom-right -->
-    <path
-        android:fillColor="#1500D4FF"
-        android:pathData="M108,108 A70,70 0 0,1 38,108 A70,70 0 0,1 108,38 Z" />
 </vector>

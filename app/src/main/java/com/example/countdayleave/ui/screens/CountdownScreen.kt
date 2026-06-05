@@ -2,7 +2,11 @@ package com.example.countdayleave.ui.screens
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import com.example.countdayleave.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -262,13 +266,34 @@ private fun TopBar(
             )
         }
 
-        Text(
-            "CountDown",
-            color = AppTheme.colors.accentPurpleLight,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.app_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(RoundedCornerShape(5.dp))
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = "Count Day Leave",
+                style = TextStyle(
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    letterSpacing = (-0.5).sp,
+                    brush = Brush.linearGradient(
+                        listOf(
+                            AppTheme.colors.gradientStart,
+                            AppTheme.colors.accentPurpleLight,
+                            AppTheme.colors.gradientEnd
+                        )
+                    )
+                )
+            )
+        }
 
         // Settings button
         IconButton(

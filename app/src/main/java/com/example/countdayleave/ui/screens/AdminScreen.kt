@@ -46,7 +46,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminScreen(onBack: () -> Unit) {
+fun AdminScreen(
+    onBack: () -> Unit,
+    onNavigateToCelebration: (eventId: String) -> Unit
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
@@ -157,6 +160,35 @@ fun AdminScreen(onBack: () -> Unit) {
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Gửi thông báo test thật 🔔", color = Color.White)
+                        }
+
+                        // Test Celebration Screen directly
+                        Button(
+                            onClick = {
+                                val targetEvent = events.firstOrNull()
+                                if (targetEvent != null) {
+                                    onNavigateToCelebration(targetEvent.id)
+                                } else {
+                                    // Create a Mock event if no events exist
+                                    coroutineScope.launch {
+                                        val mockEvent = CountdownConfig(
+                                            id = UUID.randomUUID().toString(),
+                                            milestoneName = "Sự kiện kiểm thử chúc mừng 🏆",
+                                            targetEpochMillis = System.currentTimeMillis() - 5000,
+                                            notifyTimes = emptyList(),
+                                            notifyEnabled = false
+                                        )
+                                        dataStore.saveEvent(mockEvent)
+                                        refreshData()
+                                        Toast.makeText(context, "Đã tạo sự kiện kiểm thử. Đang mở...", Toast.LENGTH_SHORT).show()
+                                        onNavigateToCelebration(mockEvent.id)
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.gradientStart),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Test Màn hình hoàn thành 🏆", color = Color.White)
                         }
 
                         // Force Update Widgets
