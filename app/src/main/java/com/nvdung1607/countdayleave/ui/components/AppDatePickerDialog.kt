@@ -67,19 +67,6 @@ fun AppDatePickerDialog(
     ) {
         DatePicker(
             state = datePickerState,
-            // Chỉ cho phép chọn ngày từ hôm nay trở đi (block ngày quá khứ)
-            dateValidator = { utcDateMillis ->
-                val todayStart = Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
-                    val local = Calendar.getInstance()
-                    set(Calendar.YEAR, local.get(Calendar.YEAR))
-                    set(Calendar.DAY_OF_YEAR, local.get(Calendar.DAY_OF_YEAR))
-                    set(Calendar.HOUR_OF_DAY, 0)
-                    set(Calendar.MINUTE, 0)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                }.timeInMillis
-                utcDateMillis >= todayStart
-            },
             modifier = Modifier.animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
