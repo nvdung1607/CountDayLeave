@@ -279,7 +279,7 @@ private fun TopBar(
             )
             Spacer(Modifier.width(6.dp))
             Text(
-                text = "Count Day Leave",
+                text = "Đếm Ngày",
                 style = TextStyle(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp,

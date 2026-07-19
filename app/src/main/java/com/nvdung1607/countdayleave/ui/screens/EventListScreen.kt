@@ -147,7 +147,7 @@ private fun EventListTopBar(onAdminClick: () -> Unit) {
         // Logo
         Image(
             painter = painterResource(id = R.drawable.app_logo),
-            contentDescription = "Count Day Leave Logo",
+            contentDescription = "Logo Đếm Ngày",
             modifier = Modifier
                 .size(48.dp)
                 .shadow(
@@ -174,7 +174,7 @@ private fun EventListTopBar(onAdminClick: () -> Unit) {
             }
         ) {
             Text(
-                text = "Count Day Leave",
+                text = "Đếm Ngày",
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 24.sp,
