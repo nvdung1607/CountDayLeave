@@ -56,20 +56,20 @@ fun SetupScreen(
     onBack: () -> Unit
 ) {
     // ---- State ----
-    var milestoneName by remember { mutableStateOf(initialMilestoneName) }
-    var targetDateMillis by remember { mutableStateOf(initialTargetMillis) }
-    var targetHour by remember { mutableIntStateOf(
+    var milestoneName by remember(initialMilestoneName) { mutableStateOf(initialMilestoneName) }
+    var targetDateMillis by remember(initialTargetMillis) { mutableStateOf(initialTargetMillis) }
+    var targetHour by remember(initialTargetMillis) { mutableIntStateOf(
         if (initialTargetMillis != null) {
             Calendar.getInstance().apply { timeInMillis = initialTargetMillis }.get(Calendar.HOUR_OF_DAY)
         } else DEFAULT_TARGET_HOUR
     ) }
-    var targetMinute by remember { mutableIntStateOf(
+    var targetMinute by remember(initialTargetMillis) { mutableIntStateOf(
         if (initialTargetMillis != null) {
             Calendar.getInstance().apply { timeInMillis = initialTargetMillis }.get(Calendar.MINUTE)
         } else 0
     ) }
-    var notifyTimes by remember { mutableStateOf(initialNotifyTimes) }
-    var notifyEnabled by remember { mutableStateOf(initialNotifyEnabled) }
+    var notifyTimes by remember(initialNotifyTimes) { mutableStateOf(initialNotifyTimes) }
+    var notifyEnabled by remember(initialNotifyEnabled) { mutableStateOf(initialNotifyEnabled) }
 
     val context = LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -241,10 +241,10 @@ fun SetupScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val templates = listOf(
-                    "🍉 Nghỉ lễ" to "Ngày nghỉ lễ",
-                    "💼 Nghỉ việc" to "Ngày nghỉ việc",
-                    "📝 Ngày thi" to "Ngày thi cử",
-                    "✈️ Du lịch" to "Chuyến đi du lịch"
+                    "🍉 Nghỉ lễ" to "🍉 Ngày nghỉ lễ",
+                    "💼 Nghỉ việc" to "💼 Ngày nghỉ việc",
+                    "📝 Ngày thi" to "📝 Ngày thi cử",
+                    "✈️ Du lịch" to "✈️ Chuyến đi du lịch"
                 )
                 templates.forEach { (label, value) ->
                     QuickTemplateChip(
@@ -588,7 +588,7 @@ private fun SetupHeader(isEditing: Boolean) {
         }
         Spacer(Modifier.height(16.dp))
         Text(
-            text = if (isEditing) "Chỉnh sửa mốc thời gian" else "Thiết lập mốc thời gian",
+            text = if (isEditing) "Sửa sự kiện" else "Thiết lập mốc thời gian",
             color = AppTheme.colors.textPrimary,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,

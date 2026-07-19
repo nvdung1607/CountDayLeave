@@ -1,6 +1,11 @@
 package com.nvdung1607.countdayleave.ui.screens
 
-import androidx.compose.animation.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import kotlinx.coroutines.launch
+import com.nvdung1607.countdayleave.ui.utils.ShareUtils
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -43,6 +48,32 @@ fun CelebrationScreen(
         label = "emoji_scale"
     )
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) {
+        // 1. Play sound
+        try {
+            val notificationUri = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_NOTIFICATION)
+            val ringtone = android.media.RingtoneManager.getRingtone(context, notificationUri)
+            ringtone?.play()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. Periodic Haptic vibrations (6 times, matching fireworks bursts at 750ms spacing)
+        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
+        if (vibrator != null && vibrator.hasVibrator()) {
+            for (i in 0 until 6) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(android.os.VibrationEffect.createOneShot(80L, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(80L)
+                }
+                kotlinx.coroutines.delay(750L)
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -50,6 +81,31 @@ fun CelebrationScreen(
     ) {
         // Fireworks layer
         FireworksCanvas(modifier = Modifier.fillMaxSize())
+
+        val coroutineScope = rememberCoroutineScope()
+        val view = LocalView.current
+
+        var showShareDialog by remember { mutableStateOf(false) }
+        var capturedBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+        if (showShareDialog && capturedBitmap != null) {
+            ShareOptionsDialog(
+                onDismiss = { showShareDialog = false },
+                onShareClick = {
+                    ShareUtils.shareBitmap(context, capturedBitmap!!, "Chia sẻ ngày chiến thắng")
+                },
+                onSaveClick = {
+                    coroutineScope.launch {
+                        val success = ShareUtils.saveImageToGallery(context, capturedBitmap!!)
+                        if (success) {
+                            android.widget.Toast.makeText(context, "Đã lưu ảnh vào thư viện!", android.widget.Toast.LENGTH_SHORT).show()
+                        } else {
+                            android.widget.Toast.makeText(context, "Lưu ảnh thất bại!", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            )
+        }
 
         // Top Buttons (Back and Settings)
         Box(
@@ -75,21 +131,58 @@ fun CelebrationScreen(
                 )
             }
 
-            // Settings button (top right)
-            IconButton(
-                onClick = onNavigateToSetup,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .background(AppTheme.colors.surfaceCard.copy(alpha = 0.8f))
+            // Settings & Share buttons (top right)
+            Row(
+                modifier = Modifier.align(Alignment.TopEnd),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Settings,
-                    contentDescription = "Chỉnh sửa",
-                    tint = AppTheme.colors.accentPurple,
-                    modifier = Modifier.size(22.dp)
-                )
+                // Share button
+                IconButton(
+                    onClick = {
+                        try {
+                            val bitmap = android.graphics.Bitmap.createBitmap(
+                                view.width,
+                                view.height,
+                                android.graphics.Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = android.graphics.Canvas(bitmap)
+                            view.draw(canvas)
+                            capturedBitmap = bitmap
+                            showShareDialog = true
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            android.widget.Toast.makeText(context, "Không thể tạo ảnh chia sẻ!", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(AppTheme.colors.surfaceCard.copy(alpha = 0.8f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = "Chia sẻ",
+                        tint = AppTheme.colors.accentBlue,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Settings button
+                IconButton(
+                    onClick = onNavigateToSetup,
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(AppTheme.colors.surfaceCard.copy(alpha = 0.8f))
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Settings,
+                        contentDescription = "Chỉnh sửa",
+                        tint = AppTheme.colors.accentPurple,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
 
@@ -102,54 +195,71 @@ fun CelebrationScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Giant celebration emoji
-            Text(
-                text = "🎉",
-                fontSize = 90.sp,
-                modifier = Modifier.scale(emojiScale)
-            )
-
-            Spacer(Modifier.height(24.dp))
-
-            // Glassmorphism card
-            Box(
+            // Shareable Card containing Emoji and Glassmorphism card
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(28.dp))
+                    .clip(RoundedCornerShape(32.dp))
                     .background(
-                        Brush.linearGradient(
+                        Brush.verticalGradient(
                             listOf(
-                                AppTheme.colors.surfaceCard.copy(alpha = 0.85f),
-                                AppTheme.colors.surfaceElevated.copy(alpha = 0.7f)
+                                AppTheme.colors.surfaceCard,
+                                AppTheme.colors.backgroundDark
                             )
                         )
                     )
-                    .padding(28.dp),
-                contentAlignment = Alignment.Center
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Chúc mừng!",
-                        color = AppTheme.colors.accentBlue,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 2.sp
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "Đã đến ngày",
-                        color = AppTheme.colors.textSecondary,
-                        fontSize = 18.sp
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        text = milestoneName,
-                        color = AppTheme.colors.textPrimary,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 34.sp
-                    )
+                // Giant celebration emoji
+                Text(
+                    text = "🎉",
+                    fontSize = 90.sp,
+                    modifier = Modifier.scale(emojiScale)
+                )
+
+                Spacer(Modifier.height(24.dp))
+
+                // Inner Glassmorphism congratulations card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    AppTheme.colors.surfaceCard.copy(alpha = 0.5f),
+                                    AppTheme.colors.surfaceElevated.copy(alpha = 0.3f)
+                                )
+                            )
+                        )
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Chúc mừng!",
+                            color = AppTheme.colors.accentBlue,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 2.sp
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "Đã đến ngày",
+                            color = AppTheme.colors.textSecondary,
+                            fontSize = 18.sp
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = milestoneName,
+                            color = AppTheme.colors.textPrimary,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 34.sp
+                        )
+                    }
                 }
             }
 

@@ -7,15 +7,15 @@ import androidx.compose.ui.graphics.Color
 // =============================================
 
 // Backgrounds
-val Dark_BackgroundDeep   = Color(0xFF080B18)
-val Dark_BackgroundDark   = Color(0xFF0D1021)
-val Dark_SurfaceCard      = Color(0xFF141829)
-val Dark_SurfaceElevated  = Color(0xFF1C2035)
+val Dark_BackgroundDeep   = Color(0xFF070913) // Dịu mắt hơn, bớt ám xanh dương đậm gắt
+val Dark_BackgroundDark   = Color(0xFF0D101D) // Nền tối dịu nhẹ
+val Dark_SurfaceCard      = Color(0xFF161A2B) // Thẻ bề mặt tối
+val Dark_SurfaceElevated  = Color(0xFF20253D) // Thẻ nổi bật hơn
 
 // Text
-val Dark_TextPrimary      = Color(0xFFF0F2FF)
-val Dark_TextSecondary    = Color(0xFFAAB4CC)
-val Dark_TextMuted        = Color(0xFF5A6180)
+val Dark_TextPrimary      = Color(0xFFF8F9FF) // Trắng bạc sáng nổi bật
+val Dark_TextSecondary    = Color(0xFFC2CBE5) // Chữ phụ sáng rõ hơn
+val Dark_TextMuted        = Color(0xFF7A86B0) // Chữ ẩn dễ nhìn hơn
 
 // =============================================
 // === LIGHT THEME ===

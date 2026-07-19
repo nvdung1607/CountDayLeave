@@ -1,9 +1,16 @@
 package com.nvdung1607.countdayleave.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import kotlinx.coroutines.launch
+import com.nvdung1607.countdayleave.ui.utils.ShareUtils
+import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -72,45 +79,103 @@ fun CountdownScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            val coroutineScope = rememberCoroutineScope()
+            val context = LocalContext.current
+            val view = LocalView.current
+
+            var showShareDialog by remember { mutableStateOf(false) }
+            var capturedBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+            if (showShareDialog && capturedBitmap != null) {
+                ShareOptionsDialog(
+                    onDismiss = { showShareDialog = false },
+                    onShareClick = {
+                        ShareUtils.shareBitmap(context, capturedBitmap!!, "Chia sẻ mốc thời gian")
+                    },
+                    onSaveClick = {
+                        coroutineScope.launch {
+                            val success = ShareUtils.saveImageToGallery(context, capturedBitmap!!)
+                            if (success) {
+                                android.widget.Toast.makeText(context, "Đã lưu ảnh vào thư viện!", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                android.widget.Toast.makeText(context, "Lưu ảnh thất bại!", android.widget.Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                )
+            }
+
             // Top bar with back button
             TopBar(
                 onBackClick = onNavigateBack,
-                onSettingsClick = onNavigateToSetup
+                onSettingsClick = onNavigateToSetup,
+                onShareClick = {
+                    try {
+                        val bitmap = android.graphics.Bitmap.createBitmap(
+                            view.width,
+                            view.height,
+                            android.graphics.Bitmap.Config.ARGB_8888
+                        )
+                        val canvas = android.graphics.Canvas(bitmap)
+                        view.draw(canvas)
+                        capturedBitmap = bitmap
+                        showShareDialog = true
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        android.widget.Toast.makeText(context, "Không thể tạo ảnh chia sẻ!", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
             )
 
             Spacer(Modifier.weight(0.5f))
 
-            // Tên mốc thời gian
-            MilestoneTitle(name = uiState.milestoneName)
+            // Shareable Card Column containing Title, Date and Grid
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                AppTheme.colors.surfaceCard,
+                                AppTheme.colors.backgroundDark
+                            )
+                        )
+                    )
+                    .padding(vertical = 24.dp, horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Tên mốc thời gian
+                MilestoneTitle(name = uiState.milestoneName)
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            // Thời gian đến đích
-            val targetDate = remember(uiState.targetEpochMillis) {
-                SimpleDateFormat("dd/MM/yyyy  HH:mm", Locale.getDefault())
-                    .format(Date(uiState.targetEpochMillis))
+                // Thời gian đến đích
+                val targetDate = remember(uiState.targetEpochMillis) {
+                    SimpleDateFormat("dd/MM/yyyy  HH:mm", Locale.getDefault())
+                        .format(Date(uiState.targetEpochMillis))
+                }
+                Text(
+                    text = "🎯  $targetDate",
+                    color = AppTheme.colors.textSecondary,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(Modifier.height(32.dp))
+
+                // Countdown grid
+                CountdownGrid(
+                    days    = uiState.days,
+                    hours   = uiState.hours,
+                    minutes = uiState.minutes,
+                    seconds = uiState.seconds
+                )
             }
-            Text(
-                text = "🎯  $targetDate",
-                color = AppTheme.colors.textSecondary,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(Modifier.height(40.dp))
-
-            // Countdown grid
-            CountdownGrid(
-                days    = uiState.days,
-                hours   = uiState.hours,
-                minutes = uiState.minutes,
-                seconds = uiState.seconds
-            )
 
             Spacer(Modifier.height(32.dp))
 
              // Motivation Quote Card
-            val context = androidx.compose.ui.platform.LocalContext.current
             val dateKey = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault()).format(java.util.Date()) }
             var quoteIndex by remember(uiState.eventId, dateKey) {
                 mutableStateOf(
@@ -247,7 +312,8 @@ fun CountdownScreen(
 @Composable
 private fun TopBar(
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onShareClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -272,49 +338,43 @@ private fun TopBar(
             )
         }
 
+
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_logo),
-                contentDescription = null,
+            // Share button
+            IconButton(
+                onClick = onShareClick,
                 modifier = Modifier
-                    .size(24.dp)
-                    .clip(RoundedCornerShape(5.dp))
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = "Đếm Ngày",
-                style = TextStyle(
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 16.sp,
-                    letterSpacing = (-0.5).sp,
-                    brush = Brush.linearGradient(
-                        listOf(
-                            AppTheme.colors.gradientStart,
-                            AppTheme.colors.accentPurpleLight,
-                            AppTheme.colors.gradientEnd
-                        )
-                    )
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.surfaceCard)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Share,
+                    contentDescription = "Chia sẻ",
+                    tint = AppTheme.colors.accentBlue,
+                    modifier = Modifier.size(20.dp)
                 )
-            )
-        }
+            }
 
-        // Settings button
-        IconButton(
-            onClick = onSettingsClick,
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .background(AppTheme.colors.surfaceCard)
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.Settings,
-                contentDescription = "Chỉnh sửa",
-                tint = AppTheme.colors.accentPurple,
-                modifier = Modifier.size(22.dp)
-            )
+            // Settings button
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(AppTheme.colors.surfaceCard)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Settings,
+                    contentDescription = "Chỉnh sửa",
+                    tint = AppTheme.colors.accentPurple,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
         }
     }
 }
@@ -384,6 +444,7 @@ private fun CountdownCard(
                 spotColor = if (isMain) AppTheme.colors.gradientEnd.copy(alpha = 0.3f) else Color.Transparent
             )
             .clip(RoundedCornerShape(20.dp))
+            .background(AppTheme.colors.backgroundDark) // SOLID BACKGROUND to hide shadow bleeding
             .background(cardBackground)
             .padding(1.dp)
     ) {
@@ -428,5 +489,111 @@ private fun CountdownCard(
             )
         }
     }
+}
+
+@Composable
+fun ShareOptionsDialog(
+    onDismiss: () -> Unit,
+    onShareClick: () -> Unit,
+    onSaveClick: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(24.dp),
+        containerColor = AppTheme.colors.backgroundDark,
+        title = {
+            Text(
+                text = "Tuỳ chọn chia sẻ",
+                color = AppTheme.colors.textPrimary,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Option 1: Share
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AppTheme.colors.surfaceCard)
+                        .clickable { onShareClick(); onDismiss() }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Share,
+                        contentDescription = null,
+                        tint = AppTheme.colors.accentBlue,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Chia sẻ ảnh",
+                            color = AppTheme.colors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "Gửi qua Messenger, Zalo, Story...",
+                            color = AppTheme.colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+
+                // Option 2: Save
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AppTheme.colors.surfaceCard)
+                        .clickable { onSaveClick(); onDismiss() }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Download,
+                        contentDescription = null,
+                        tint = AppTheme.colors.accentPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Lưu ảnh về máy",
+                            color = AppTheme.colors.textPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
+                        Text(
+                            text = "Tải ảnh về thư viện thiết bị",
+                            color = AppTheme.colors.textSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Đóng",
+                    color = AppTheme.colors.textSecondary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    )
 }
 
