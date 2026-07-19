@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import com.nvdung1607.countdayleave.R
@@ -118,10 +119,15 @@ fun CountdownScreen(
                 )
             }
             val quote = remember(quoteIndex) { com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex) }
+            val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                    .padding(horizontal = 8.dp)
+                    .clickable {
+                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(quote))
+                        android.widget.Toast.makeText(context, "Đã sao chép câu danh ngôn vào bộ nhớ tạm! 💡", android.widget.Toast.LENGTH_SHORT).show()
+                    },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = AppTheme.colors.surfaceCard.copy(alpha = 0.6f)

@@ -30,6 +30,7 @@ import com.nvdung1607.countdayleave.ui.screens.SetupScreen
 import com.nvdung1607.countdayleave.ui.theme.CountDayLeaveTheme
 import com.nvdung1607.countdayleave.viewmodel.CountdownViewModel
 import com.nvdung1607.countdayleave.viewmodel.EventListViewModel
+import kotlinx.coroutines.launch
 
 // ---- Navigation routes ----
 object Routes {
@@ -164,6 +165,7 @@ fun AppNavigation(
             val eventId = backStackEntry.arguments?.getString("eventId")
             val viewModel: CountdownViewModel = viewModel(key = eventId ?: "new_event")
             val uiState by viewModel.uiState.collectAsState()
+            val coroutineScope = rememberCoroutineScope()
 
             LaunchedEffect(eventId) {
                 if (eventId != null) {
@@ -178,8 +180,22 @@ fun AppNavigation(
                 initialNotifyEnabled = uiState.notifyEnabled,
                 isEditing = eventId != null,
                 onSave = { name, targetMillis, notifyTimes, notifyEnabled ->
-                    viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled)
-                    navController.popBackStack()
+                    coroutineScope.launch {
+                        val savedId = viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled)
+                        if (eventId == null) {
+                            navController.navigate("${Routes.COUNTDOWN}/$savedId") {
+                                popUpTo(Routes.EVENT_LIST) { inclusive = false }
+                            }
+                        } else {
+                            navController.popBackStack()
+                        }
+                    }
+                },
+                onDelete = {
+                    viewModel.deleteCurrentEvent()
+                    navController.navigate(Routes.EVENT_LIST) {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
                 onBack = {
                     navController.popBackStack()

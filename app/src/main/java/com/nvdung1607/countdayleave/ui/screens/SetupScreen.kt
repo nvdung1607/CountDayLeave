@@ -52,6 +52,7 @@ fun SetupScreen(
         notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean
     ) -> Unit,
+    onDelete: () -> Unit = {},
     onBack: () -> Unit
 ) {
     // ---- State ----
@@ -231,6 +232,27 @@ fun SetupScreen(
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Spacer(Modifier.height(10.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                val templates = listOf(
+                    "🍉 Nghỉ lễ" to "Ngày nghỉ lễ",
+                    "💼 Nghỉ việc" to "Ngày nghỉ việc",
+                    "📝 Ngày thi" to "Ngày thi cử",
+                    "✈️ Du lịch" to "Chuyến đi du lịch"
+                )
+                templates.forEach { (label, value) ->
+                    QuickTemplateChip(
+                        label = label,
+                        onClick = { milestoneName = value }
+                    )
+                }
+            }
 
             Spacer(Modifier.height(24.dp))
 
@@ -468,6 +490,72 @@ fun SetupScreen(
                 }
             }
 
+            if (isEditing) {
+                Spacer(Modifier.height(16.dp))
+
+                var showDeleteConfirm by remember { mutableStateOf(false) }
+
+                if (showDeleteConfirm) {
+                    AlertDialog(
+                        onDismissRequest = { showDeleteConfirm = false },
+                        containerColor = AppTheme.colors.surfaceCard,
+                        title = {
+                            Text("Xóa sự kiện?", color = AppTheme.colors.textPrimary, fontWeight = FontWeight.Bold)
+                        },
+                        text = {
+                            Text(
+                                "Bạn có chắc chắn muốn xóa mốc thời gian này không?",
+                                color = AppTheme.colors.textSecondary
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showDeleteConfirm = false
+                                    onDelete()
+                                }
+                            ) {
+                                Text("Xóa", color = AppTheme.colors.error, fontWeight = FontWeight.Bold)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteConfirm = false }) {
+                                Text("Hủy", color = AppTheme.colors.textMuted)
+                            }
+                        }
+                    )
+                }
+
+                OutlinedButton(
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    border = BorderStroke(1.dp, AppTheme.colors.error),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = AppTheme.colors.error
+                    )
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.DeleteOutline,
+                            contentDescription = "Xóa",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = "Xóa sự kiện",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(24.dp))
         }
     }
@@ -565,6 +653,33 @@ private fun PickerCard(
                 textAlign = TextAlign.Center
             )
         }
+    }
+}
+
+@Composable
+private fun QuickTemplateChip(
+    label: String,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(AppTheme.colors.surfaceCard)
+            .border(
+                width = 1.dp,
+                color = AppTheme.colors.textMuted.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = AppTheme.colors.textPrimary,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
 

@@ -68,42 +68,41 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     /** Lưu/cập nhật sự kiện này. */
-    fun saveConfig(
+    suspend fun saveConfig(
         milestoneName: String,
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean
-    ) {
-        viewModelScope.launch {
-            val currentId = _uiState.value.eventId.ifBlank {
-                java.util.UUID.randomUUID().toString()
-            }
-            val config = CountdownConfig(
-                id = currentId,
+    ): String {
+        val currentId = _uiState.value.eventId.ifBlank {
+            java.util.UUID.randomUUID().toString()
+        }
+        val config = CountdownConfig(
+            id = currentId,
+            milestoneName = milestoneName,
+            targetEpochMillis = targetEpochMillis,
+            notifyTimes = notifyTimes,
+            notifyEnabled = notifyEnabled
+        )
+        dataStore.saveEvent(config)
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                eventId = currentId,
                 milestoneName = milestoneName,
                 targetEpochMillis = targetEpochMillis,
                 notifyTimes = notifyTimes,
                 notifyEnabled = notifyEnabled
             )
-            dataStore.saveEvent(config)
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    eventId = currentId,
-                    milestoneName = milestoneName,
-                    targetEpochMillis = targetEpochMillis,
-                    notifyTimes = notifyTimes,
-                    notifyEnabled = notifyEnabled
-                )
-            }
-            if (notifyEnabled && targetEpochMillis > System.currentTimeMillis()) {
-                scheduler.schedule(config)
-            } else {
-                scheduler.cancel(currentId)
-            }
-            com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(getApplication(), currentId)
-            startTimer()
         }
+        if (notifyEnabled && targetEpochMillis > System.currentTimeMillis()) {
+            scheduler.schedule(config)
+        } else {
+            scheduler.cancel(currentId)
+        }
+        com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgetsForEvent(getApplication(), currentId)
+        startTimer()
+        return currentId
     }
 
     /** Xóa sự kiện hiện tại. */
