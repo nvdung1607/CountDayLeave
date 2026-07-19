@@ -4,7 +4,8 @@
     android:minHeight="110dp"
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/countdown_widget"
-    android:configure="com.example.countdayleave.widget.WidgetConfigureActivity"
+    android:configure="com.nvdung1607.countdayleave.widget.WidgetConfigureActivity"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen">
 </appwidget-provider>
+

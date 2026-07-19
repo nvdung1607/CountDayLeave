@@ -1,9 +1,9 @@
 @startuml
-class com.example.countdayleave.notification.NotificationScheduler$Companion {
+class com.nvdung1607.countdayleave.notification.NotificationScheduler$Companion {
 +  REQUEST_CODE
 }
 
-class com.example.countdayleave.notification.NotificationScheduler {
+class com.nvdung1607.countdayleave.notification.NotificationScheduler {
 -  alarmManager
 + void schedule(CountdownConfig)
 + void cancel()
@@ -12,7 +12,7 @@ class com.example.countdayleave.notification.NotificationScheduler {
 }
 
 
-class com.example.countdayleave.data.CountdownDataStore$Companion {
+class com.nvdung1607.countdayleave.data.CountdownDataStore$Companion {
 -  KEY_MILESTONE_NAME
 -  KEY_TARGET_EPOCH
 -  KEY_NOTIFY_TIMES
@@ -20,47 +20,47 @@ class com.example.countdayleave.data.CountdownDataStore$Companion {
 -  KEY_IS_CONFIGURED
 }
 
-class com.example.countdayleave.data.CountdownDataStore {
+class com.nvdung1607.countdayleave.data.CountdownDataStore {
 + Flow<CountdownConfig?> configFlow
 + void saveConfig(CountdownConfig)
 + void clearConfig()
 }
 
 
-class com.example.countdayleave.notification.DailyNotificationReceiver$Companion {
+class com.nvdung1607.countdayleave.notification.DailyNotificationReceiver$Companion {
 +  CHANNEL_ID
 +  NOTIFICATION_ID
 +  ACTION_OPEN_CELEBRATION
 }
 
-class com.example.countdayleave.notification.DailyNotificationReceiver {
+class com.nvdung1607.countdayleave.notification.DailyNotificationReceiver {
 + void onReceive(Context,Intent)
 - void sendNotification(Context,String,String,String)
 }
 
-class com.example.countdayleave.model.CountdownConfig {
+class com.nvdung1607.countdayleave.model.CountdownConfig {
 }
-class com.example.countdayleave.ui.theme.AppTheme {
+class com.nvdung1607.countdayleave.ui.theme.AppTheme {
 + AppColors colors
 }
 
-class com.example.countdayleave.ui.components.Particle {
+class com.nvdung1607.countdayleave.ui.components.Particle {
 }
-class com.example.countdayleave.ui.components.FireworkBurst {
+class com.nvdung1607.countdayleave.ui.components.FireworkBurst {
 }
-class com.example.countdayleave.model.NotifyTime {
+class com.nvdung1607.countdayleave.model.NotifyTime {
 }
-class com.example.countdayleave.notification.BootReceiver {
+class com.nvdung1607.countdayleave.notification.BootReceiver {
 + void onReceive(Context,Intent)
 }
 
-class com.example.countdayleave.Routes {
+class com.nvdung1607.countdayleave.Routes {
 +  SETUP
 +  COUNTDOWN
 +  CELEBRATION
 }
 
-class com.example.countdayleave.MainActivity {
+class com.nvdung1607.countdayleave.MainActivity {
 -  notificationPermissionLauncher
 + void onCreate(Bundle?)
 - String resolveStartDestination()
@@ -68,11 +68,11 @@ class com.example.countdayleave.MainActivity {
 }
 
 
-class com.example.countdayleave.ui.theme.AppColors {
+class com.nvdung1607.countdayleave.ui.theme.AppColors {
 }
-class com.example.countdayleave.viewmodel.CountdownUiState {
+class com.nvdung1607.countdayleave.viewmodel.CountdownUiState {
 }
-class com.example.countdayleave.viewmodel.CountdownViewModel {
+class com.nvdung1607.countdayleave.viewmodel.CountdownViewModel {
 -  dataStore
 -  scheduler
 -  _uiState
@@ -87,11 +87,11 @@ class com.example.countdayleave.viewmodel.CountdownViewModel {
 
 
 
-com.example.countdayleave.notification.NotificationScheduler +.. com.example.countdayleave.notification.NotificationScheduler$Companion
-com.example.countdayleave.data.CountdownDataStore +.. com.example.countdayleave.data.CountdownDataStore$Companion
-com.example.countdayleave.notification.DailyNotificationReceiver +.. com.example.countdayleave.notification.DailyNotificationReceiver$Companion
-android.content.BroadcastReceiver <|-- com.example.countdayleave.notification.DailyNotificationReceiver
-android.content.BroadcastReceiver <|-- com.example.countdayleave.notification.BootReceiver
-androidx.activity.ComponentActivity <|-- com.example.countdayleave.MainActivity
-androidx.lifecycle.AndroidViewModel <|-- com.example.countdayleave.viewmodel.CountdownViewModel
+com.nvdung1607.countdayleave.notification.NotificationScheduler +.. com.nvdung1607.countdayleave.notification.NotificationScheduler$Companion
+com.nvdung1607.countdayleave.data.CountdownDataStore +.. com.nvdung1607.countdayleave.data.CountdownDataStore$Companion
+com.nvdung1607.countdayleave.notification.DailyNotificationReceiver +.. com.nvdung1607.countdayleave.notification.DailyNotificationReceiver$Companion
+android.content.BroadcastReceiver <|-- com.nvdung1607.countdayleave.notification.DailyNotificationReceiver
+android.content.BroadcastReceiver <|-- com.nvdung1607.countdayleave.notification.BootReceiver
+androidx.activity.ComponentActivity <|-- com.nvdung1607.countdayleave.MainActivity
+androidx.lifecycle.AndroidViewModel <|-- com.nvdung1607.countdayleave.viewmodel.CountdownViewModel
 @enduml

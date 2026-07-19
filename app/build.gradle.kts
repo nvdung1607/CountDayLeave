@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.countdayleave"
+    namespace = "com.nvdung1607.countdayleave"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.countdayleave"
+        applicationId = "com.nvdung1607.countdayleave"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -20,7 +20,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
