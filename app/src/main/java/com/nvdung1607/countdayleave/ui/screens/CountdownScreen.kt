@@ -415,6 +415,7 @@ fun CountdownScreen(
         }
     }
 }
+}
 
 // ---- Top bar with back ----
 @Composable
