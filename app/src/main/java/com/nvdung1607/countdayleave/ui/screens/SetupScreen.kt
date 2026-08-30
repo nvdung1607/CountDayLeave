@@ -142,7 +142,7 @@ fun SetupScreen(
         AppTimePickerDialog(
             initialHour = targetHour,
             initialMinute = targetMinute,
-            title = "Giờ đến đích",
+            title = if (isCountUp) "Giờ bắt đầu" else "Giờ đến đích",
             onTimeSelected = { h, m -> targetHour = h; targetMinute = m },
             onDismiss = { showTargetTimePicker = false }
         )
@@ -271,7 +271,7 @@ fun SetupScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Tính ngày đã qua",
+                        text = "Ngày đã qua",
                         color = if (isCountUp) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                     )
@@ -311,12 +311,21 @@ fun SetupScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val templates = listOf(
-                    "🍉 Nghỉ lễ" to "🍉 Ngày nghỉ lễ",
-                    "💼 Nghỉ việc" to "💼 Ngày nghỉ việc",
-                    "📝 Ngày thi" to "📝 Ngày thi cử",
-                    "✈️ Du lịch" to "✈️ Chuyến đi du lịch"
-                )
+                val templates = if (isCountUp) {
+                    listOf(
+                        "❤️ Ngày yêu" to "❤️ Ngày yêu nhau",
+                        "🏥 Phẫu thuật" to "🏥 Ngày phẫu thuật",
+                        "🚭 Cai thuốc" to "🚭 Bắt đầu cai thuốc",
+                        "👶 Bé ra đời" to "👶 Bé chào đời"
+                    )
+                } else {
+                    listOf(
+                        "🍉 Nghỉ lễ" to "🍉 Ngày nghỉ lễ",
+                        "💼 Nghỉ việc" to "💼 Ngày nghỉ việc",
+                        "📝 Ngày thi" to "📝 Ngày thi cử",
+                        "✈️ Du lịch" to "✈️ Chuyến đi du lịch"
+                    )
+                }
                 templates.forEach { (label, value) ->
                     QuickTemplateChip(
                         label = label,
@@ -328,7 +337,7 @@ fun SetupScreen(
             Spacer(Modifier.height(24.dp))
 
             // Thời gian đến đích
-            SectionLabel(text = "THỜI GIAN ĐẾN ĐÍCH")
+            SectionLabel(text = if (isCountUp) "THỜI GIAN BẮT ĐẦU" else "THỜI GIAN ĐẾN ĐÍCH")
             Spacer(Modifier.height(8.dp))
 
             Row(
