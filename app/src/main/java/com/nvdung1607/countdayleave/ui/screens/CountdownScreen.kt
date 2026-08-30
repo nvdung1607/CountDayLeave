@@ -420,13 +420,13 @@ fun CountdownScreen(
                                 tint = if (hasCustomBackground) Color(0xFF1E293B) else AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                                 modifier = Modifier.size(16.dp)
                             )
+                        }
                     }
                 }
             }
 
             // Footer hint — anchored at the very bottom of the screen
             if (notifyEnabled) {
-                Spacer(Modifier.height(8.dp))
                 Text(
                     text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
                     color = if (backgroundBitmap != null) Color.White.copy(alpha = 0.95f) else AppTheme.colors.textMuted,
@@ -435,11 +435,10 @@ fun CountdownScreen(
                     lineHeight = 20.sp,
                     fontWeight = if (backgroundBitmap != null) FontWeight.SemiBold else FontWeight.Normal
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(16.dp))
             }
         }
     }
-}
 }
 }
 
