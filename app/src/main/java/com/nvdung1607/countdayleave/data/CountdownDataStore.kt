@@ -10,6 +10,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.nvdung1607.countdayleave.model.CountdownConfig
 import com.nvdung1607.countdayleave.model.NotifyTime
+import java.io.IOException
+import androidx.datastore.preferences.core.emptyPreferences
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
@@ -38,15 +41,23 @@ class CountdownDataStore(private val context: Context) {
     }
 
     /** Flow phát ra danh sách toàn bộ sự kiện. */
-    val eventsFlow: Flow<List<CountdownConfig>> = context.dataStore.data.map { prefs ->
-        val json = prefs[KEY_EVENTS_JSON]
-        if (json != null) {
-            parseEventsJson(json)
-        } else {
-            // Migration: nếu có dữ liệu cũ, chuyển sang list
-            migrateFromLegacy(prefs)
+    val eventsFlow: Flow<List<CountdownConfig>> = context.dataStore.data
+        .catch { exception ->
+            if (exception is IOException) {
+                emit(emptyPreferences())
+            } else {
+                throw exception
+            }
         }
-    }
+        .map { prefs ->
+            val json = prefs[KEY_EVENTS_JSON]
+            if (json != null) {
+                parseEventsJson(json)
+            } else {
+                // Migration: nếu có dữ liệu cũ, chuyển sang list
+                migrateFromLegacy(prefs)
+            }
+        }
 
     /** Lưu hoặc cập nhật một sự kiện (upsert theo id). */
     suspend fun saveEvent(config: CountdownConfig) {
