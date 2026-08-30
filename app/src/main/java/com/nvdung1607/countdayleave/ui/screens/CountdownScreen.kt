@@ -72,6 +72,8 @@ fun CountdownScreen(
         } else null
     }
 
+    val hasCustomBackground = backgroundBitmap != null
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -93,8 +95,8 @@ fun CountdownScreen(
                         Brush.verticalGradient(
                             listOf(
                                 Color.Black.copy(alpha = 0.35f),
-                                Color.Black.copy(alpha = 0.15f),
-                                Color.Black.copy(alpha = 0.45f)
+                                Color.Black.copy(alpha = 0.20f),
+                                Color.Black.copy(alpha = 0.50f)
                             )
                         )
                     )
@@ -176,7 +178,8 @@ fun CountdownScreen(
                             e.printStackTrace()
                             android.widget.Toast.makeText(context, "Không thể tạo ảnh chia sẻ!", android.widget.Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    },
+                    hasCustomBackground = hasCustomBackground
                 )
 
                 // Vertically centered content area
@@ -198,20 +201,49 @@ fun CountdownScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
+                            .shadow(
+                                elevation = if (hasCustomBackground) 20.dp else 12.dp,
+                                shape = RoundedCornerShape(28.dp),
+                                ambientColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.25f) else Color.Transparent,
+                                spotColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.35f) else Color.Transparent
+                            )
+                            .clip(RoundedCornerShape(28.dp))
                             .background(
-                                Brush.verticalGradient(
-                                    listOf(
-                                        AppTheme.colors.surfaceCard,
-                                        AppTheme.colors.backgroundDark
+                                if (hasCustomBackground)
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            Color.White.copy(alpha = 0.50f),
+                                            Color.White.copy(alpha = 0.30f)
+                                        )
                                     )
-                                )
+                                else
+                                    Brush.verticalGradient(
+                                        listOf(
+                                            AppTheme.colors.surfaceCard,
+                                            AppTheme.colors.backgroundDark
+                                        )
+                                    )
+                            )
+                            .then(
+                                if (hasCustomBackground)
+                                    Modifier.border(
+                                        width = 1.2.dp,
+                                        brush = Brush.verticalGradient(
+                                            listOf(
+                                                Color.White.copy(alpha = 0.90f),
+                                                Color.White.copy(alpha = 0.35f)
+                                            )
+                                        ),
+                                        shape = RoundedCornerShape(28.dp)
+                                    )
+                                else
+                                    Modifier
                             )
                             .padding(vertical = 24.dp, horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                     // Tên mốc thời gian
-                    MilestoneTitle(name = uiState.milestoneName)
+                    MilestoneTitle(name = uiState.milestoneName, hasCustomBackground = hasCustomBackground)
 
                     Spacer(Modifier.height(8.dp))
 
@@ -222,8 +254,9 @@ fun CountdownScreen(
                     }
                     Text(
                         text = if (uiState.isCountUp) "📍  Bắt đầu: $targetDate" else "🎯  Đích đến: $targetDate",
-                        color = AppTheme.colors.textSecondary,
+                        color = if (hasCustomBackground) Color(0xFF334155) else AppTheme.colors.textSecondary,
                         fontSize = 13.sp,
+                        fontWeight = if (hasCustomBackground) FontWeight.SemiBold else FontWeight.Normal,
                         textAlign = TextAlign.Center
                     )
 
@@ -238,19 +271,19 @@ fun CountdownScreen(
                                 .background(
                                     Brush.linearGradient(
                                         listOf(
-                                            Color(0xFF4CAF50).copy(alpha = 0.2f),
-                                            Color(0xFF81C784).copy(alpha = 0.1f)
+                                            Color(0xFF4CAF50).copy(alpha = if (hasCustomBackground) 0.35f else 0.2f),
+                                            Color(0xFF81C784).copy(alpha = if (hasCustomBackground) 0.20f else 0.1f)
                                         )
                                     )
                                 )
-                                .border(1.dp, Color(0xFF4CAF50).copy(alpha = 0.4f), RoundedCornerShape(18.dp))
+                                .border(1.dp, Color(0xFF4CAF50).copy(alpha = 0.5f), RoundedCornerShape(18.dp))
                                 .padding(vertical = 20.dp, horizontal = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = "🎉  ĐÃ HOÀN THÀNH MỐC THỜI GIAN!",
-                                    color = Color(0xFF81C784),
+                                    color = if (hasCustomBackground) Color(0xFF1B5E20) else Color(0xFF81C784),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
@@ -276,7 +309,8 @@ fun CountdownScreen(
                             hours   = uiState.hours,
                             minutes = uiState.minutes,
                             seconds = uiState.seconds,
-                            useFourInRow = adaptiveInfo.isLandscape && adaptiveInfo.screenWidthDp >= 560.dp
+                            useFourInRow = adaptiveInfo.isLandscape && adaptiveInfo.screenWidthDp >= 560.dp,
+                            hasCustomBackground = hasCustomBackground
                         )
                     }
                 }
@@ -297,28 +331,42 @@ fun CountdownScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 8.dp)
+                        .shadow(
+                            elevation = if (hasCustomBackground) 12.dp else 0.dp,
+                            shape = RoundedCornerShape(18.dp),
+                            ambientColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.15f) else Color.Transparent,
+                            spotColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.25f) else Color.Transparent
+                        )
                         .clickable {
                             clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(quote))
                             android.widget.Toast.makeText(context, "Đã sao chép câu danh ngôn vào bộ nhớ tạm! 💡", android.widget.Toast.LENGTH_SHORT).show()
                         },
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
+                        containerColor = if (hasCustomBackground) Color.White.copy(alpha = 0.45f) else AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        Brush.linearGradient(
-                            colors = listOf(
-                                AppTheme.colors.gradientStart.copy(alpha = 0.2f),
-                                AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
+                        if (hasCustomBackground)
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.85f),
+                                    Color.White.copy(alpha = 0.30f)
+                                )
                             )
-                        )
+                        else
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    AppTheme.colors.gradientStart.copy(alpha = 0.2f),
+                                    AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
+                                )
+                            )
                     )
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 16.dp, horizontal = 4.dp), // Pushes buttons closer to edges
+                            .padding(vertical = 16.dp, horizontal = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(
@@ -337,7 +385,7 @@ fun CountdownScreen(
                             Icon(
                                 imageVector = Icons.Rounded.ArrowBackIosNew,
                                 contentDescription = "Quote trước",
-                                tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                                tint = if (hasCustomBackground) Color(0xFF1E293B) else AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -346,7 +394,7 @@ fun CountdownScreen(
                             text = buildAnnotatedString {
                                 withStyle(
                                     style = SpanStyle(
-                                        color = AppTheme.colors.accentPurpleLight,
+                                        color = if (hasCustomBackground) Color(0xFF6D28D9) else AppTheme.colors.accentPurpleLight,
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -356,7 +404,7 @@ fun CountdownScreen(
                                 append(quote)
                                 withStyle(
                                     style = SpanStyle(
-                                        color = AppTheme.colors.accentPurpleLight,
+                                        color = if (hasCustomBackground) Color(0xFF6D28D9) else AppTheme.colors.accentPurpleLight,
                                         fontSize = 20.sp,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -364,9 +412,9 @@ fun CountdownScreen(
                                     append(" ”")
                                 }
                             },
-                            color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
-                            fontSize = 15.sp, // Larger quote size
-                            fontWeight = FontWeight.Medium,
+                            color = if (hasCustomBackground) Color(0xFF0F172A) else AppTheme.colors.textPrimary.copy(alpha = 0.9f),
+                            fontSize = 15.sp,
+                            fontWeight = if (hasCustomBackground) FontWeight.SemiBold else FontWeight.Medium,
                             fontStyle = FontStyle.Italic,
                             textAlign = TextAlign.Center,
                             lineHeight = 22.sp,
@@ -391,7 +439,7 @@ fun CountdownScreen(
                             Icon(
                                 imageVector = Icons.Rounded.ArrowForwardIos,
                                 contentDescription = "Quote sau",
-                                tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                                tint = if (hasCustomBackground) Color(0xFF1E293B) else AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -422,8 +470,19 @@ fun CountdownScreen(
 private fun TopBar(
     onBackClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
+    hasCustomBackground: Boolean = false
 ) {
+    val buttonBackground = if (hasCustomBackground)
+        Color.White.copy(alpha = 0.55f)
+    else
+        AppTheme.colors.surfaceCard
+
+    val buttonBorder = if (hasCustomBackground)
+        Modifier.border(1.dp, Color.White.copy(alpha = 0.85f), CircleShape)
+    else
+        Modifier
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -436,18 +495,18 @@ private fun TopBar(
             onClick = onBackClick,
             modifier = Modifier
                 .size(42.dp)
+                .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
                 .clip(CircleShape)
-                .background(AppTheme.colors.surfaceCard)
+                .background(buttonBackground)
+                .then(buttonBorder)
         ) {
             Icon(
                 imageVector = Icons.Rounded.ArrowBackIosNew,
                 contentDescription = "Quay lại",
-                tint = AppTheme.colors.textSecondary,
+                tint = if (hasCustomBackground) Color(0xFF0F172A) else AppTheme.colors.textSecondary,
                 modifier = Modifier.size(18.dp)
             )
         }
-
-
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -458,13 +517,15 @@ private fun TopBar(
                 onClick = onShareClick,
                 modifier = Modifier
                     .size(42.dp)
+                    .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
                     .clip(CircleShape)
-                    .background(AppTheme.colors.surfaceCard)
+                    .background(buttonBackground)
+                    .then(buttonBorder)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
                     contentDescription = "Chia sẻ",
-                    tint = AppTheme.colors.accentBlue,
+                    tint = if (hasCustomBackground) Color(0xFF0284C7) else AppTheme.colors.accentBlue,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -474,13 +535,15 @@ private fun TopBar(
                 onClick = onSettingsClick,
                 modifier = Modifier
                     .size(42.dp)
+                    .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
                     .clip(CircleShape)
-                    .background(AppTheme.colors.surfaceCard)
+                    .background(buttonBackground)
+                    .then(buttonBorder)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,
                     contentDescription = "Chỉnh sửa",
-                    tint = AppTheme.colors.accentPurple,
+                    tint = if (hasCustomBackground) Color(0xFF6D28D9) else AppTheme.colors.accentPurple,
                     modifier = Modifier.size(22.dp)
                 )
             }
@@ -490,10 +553,10 @@ private fun TopBar(
 
 // ---- Milestone title ----
 @Composable
-private fun MilestoneTitle(name: String) {
+private fun MilestoneTitle(name: String, hasCustomBackground: Boolean = false) {
     Text(
         text = name,
-        color = AppTheme.colors.textPrimary,
+        color = if (hasCustomBackground) Color(0xFF0F172A) else AppTheme.colors.textPrimary,
         fontSize = 30.sp,
         fontWeight = FontWeight.ExtraBold,
         textAlign = TextAlign.Center,
@@ -508,17 +571,18 @@ private fun CountdownGrid(
     hours: Long,
     minutes: Long,
     seconds: Long,
-    useFourInRow: Boolean = false
+    useFourInRow: Boolean = false,
+    hasCustomBackground: Boolean = false
 ) {
     if (useFourInRow) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true)
-            CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true)
-            CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f))
-            CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true)
+            CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true, hasCustomBackground = hasCustomBackground)
+            CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true, hasCustomBackground = hasCustomBackground)
+            CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f), hasCustomBackground = hasCustomBackground)
+            CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true, hasCustomBackground = hasCustomBackground)
         }
     } else {
         Column(
@@ -526,12 +590,12 @@ private fun CountdownGrid(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true)
-                CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true)
+                CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true, hasCustomBackground = hasCustomBackground)
+                CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true, hasCustomBackground = hasCustomBackground)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f))
-                CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true)
+                CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f), hasCustomBackground = hasCustomBackground)
+                CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true, hasCustomBackground = hasCustomBackground)
             }
         }
     }
@@ -544,7 +608,8 @@ private fun CountdownCard(
     label: String,
     modifier: Modifier = Modifier,
     isMain: Boolean = false,
-    isSeconds: Boolean = false
+    isSeconds: Boolean = false,
+    hasCustomBackground: Boolean = false
 ) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val fontScale = density.fontScale
@@ -555,10 +620,16 @@ private fun CountdownCard(
         label = "countdown_$label"
     )
 
-    val cardBackground = if (isMain)
+    val cardBackground = if (hasCustomBackground) {
+        if (isMain)
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.40f)))
+        else
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.50f), Color.White.copy(alpha = 0.30f)))
+    } else if (isMain) {
         Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.25f), AppTheme.colors.gradientEnd.copy(alpha = 0.15f)))
-    else
+    } else {
         Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
+    }
 
     val targetFontSize = remember(isMain, fontScale) {
         val baseSp = if (isMain) 52f else 38f
@@ -569,14 +640,29 @@ private fun CountdownCard(
     Box(
         modifier = modifier
             .shadow(
-                elevation = if (isMain) 12.dp else 4.dp,
+                elevation = if (hasCustomBackground) 8.dp else if (isMain) 12.dp else 4.dp,
                 shape = RoundedCornerShape(20.dp),
-                ambientColor = if (isMain) AppTheme.colors.gradientStart.copy(alpha = 0.3f) else Color.Transparent,
-                spotColor = if (isMain) AppTheme.colors.gradientEnd.copy(alpha = 0.3f) else Color.Transparent
+                ambientColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.12f) else if (isMain) AppTheme.colors.gradientStart.copy(alpha = 0.3f) else Color.Transparent,
+                spotColor = if (hasCustomBackground) Color.Black.copy(alpha = 0.18f) else if (isMain) AppTheme.colors.gradientEnd.copy(alpha = 0.3f) else Color.Transparent
             )
             .clip(RoundedCornerShape(20.dp))
-            .background(AppTheme.colors.backgroundDark) // SOLID BACKGROUND to hide shadow bleeding
+            .background(if (hasCustomBackground) Color.Transparent else AppTheme.colors.backgroundDark) // SOLID BACKGROUND only when not glass
             .background(cardBackground)
+            .then(
+                if (hasCustomBackground)
+                    Modifier.border(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.85f),
+                                Color.White.copy(alpha = 0.35f)
+                            )
+                        ),
+                        RoundedCornerShape(20.dp)
+                    )
+                else
+                    Modifier
+            )
             .padding(1.dp)
     ) {
         Column(
@@ -584,7 +670,9 @@ private fun CountdownCard(
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(19.dp))
                 .background(
-                    if (isMain)
+                    if (hasCustomBackground)
+                        Color.Transparent
+                    else if (isMain)
                         Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.12f), AppTheme.colors.gradientEnd.copy(alpha = 0.08f)))
                     else
                         Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
@@ -602,9 +690,15 @@ private fun CountdownCard(
             ) { displayValue ->
                 Text(
                     text = displayValue,
-                    color = if (isSeconds) AppTheme.colors.accentBlue
-                             else if (isMain) AppTheme.colors.textPrimary
-                             else AppTheme.colors.accentPurpleLight,
+                    color = if (hasCustomBackground) {
+                        if (isSeconds) Color(0xFF0284C7)
+                        else if (isMain) Color(0xFF0F172A)
+                        else Color(0xFF6D28D9)
+                    } else {
+                        if (isSeconds) AppTheme.colors.accentBlue
+                        else if (isMain) AppTheme.colors.textPrimary
+                        else AppTheme.colors.accentPurpleLight
+                    },
                     fontSize = targetFontSize,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = (-1).sp,
@@ -615,9 +709,9 @@ private fun CountdownCard(
             Spacer(Modifier.height(4.dp))
             Text(
                 text = label,
-                color = AppTheme.colors.textMuted,
+                color = if (hasCustomBackground) Color(0xFF334155) else AppTheme.colors.textMuted,
                 fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
+                fontWeight = if (hasCustomBackground) FontWeight.Bold else FontWeight.Medium,
                 letterSpacing = 2.sp,
                 maxLines = 1
             )
