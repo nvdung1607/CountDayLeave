@@ -85,16 +85,16 @@ fun CountdownScreen(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
-            // Multi-layer dark gradient overlay to ensure text contrast and legibility
+            // Subtle dark overlay to let the photo shine through crisply while providing contrast
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                AppTheme.colors.backgroundDeep.copy(alpha = 0.85f),
-                                AppTheme.colors.backgroundDeep.copy(alpha = 0.70f),
-                                AppTheme.colors.backgroundDeep.copy(alpha = 0.92f)
+                                Color.Black.copy(alpha = 0.35f),
+                                Color.Black.copy(alpha = 0.15f),
+                                Color.Black.copy(alpha = 0.45f)
                             )
                         )
                     )
@@ -154,13 +154,6 @@ fun CountdownScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .widthIn(max = adaptiveInfo.maxContentWidth)
-                    .then(
-                        if (adaptiveInfo.isCompactHeight || adaptiveInfo.fontScale > 1.15f || adaptiveInfo.isLandscape) {
-                            Modifier.verticalScroll(rememberScrollState())
-                        } else {
-                            Modifier
-                        }
-                    )
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -186,24 +179,37 @@ fun CountdownScreen(
                     }
                 )
 
-                Spacer(Modifier.height(16.dp))
-
-                // Shareable Card Column containing Title, Date and Grid
+                // Vertically centered content area
                 Column(
                     modifier = Modifier
+                        .weight(1f)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    AppTheme.colors.surfaceCard,
-                                    AppTheme.colors.backgroundDark
+                        .then(
+                            if (adaptiveInfo.isCompactHeight || adaptiveInfo.fontScale > 1.15f || adaptiveInfo.isLandscape) {
+                                Modifier.verticalScroll(rememberScrollState())
+                            } else {
+                                Modifier
+                            }
+                        ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    // Shareable Card Column containing Title, Date and Grid
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        AppTheme.colors.surfaceCard,
+                                        AppTheme.colors.backgroundDark
+                                    )
                                 )
                             )
-                        )
-                        .padding(vertical = 24.dp, horizontal = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
+                            .padding(vertical = 24.dp, horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                     // Tên mốc thời gian
                     MilestoneTitle(name = uiState.milestoneName)
 
@@ -398,14 +404,13 @@ fun CountdownScreen(
                 if (notifyEnabled) {
                     Text(
                         text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
-                        color = AppTheme.colors.textMuted,
+                        color = if (backgroundBitmap != null) Color.White.copy(alpha = 0.95f) else AppTheme.colors.textMuted,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center,
-                        lineHeight = 20.sp
+                        lineHeight = 20.sp,
+                        fontWeight = if (backgroundBitmap != null) FontWeight.SemiBold else FontWeight.Normal
                     )
                 }
-
-                Spacer(Modifier.height(32.dp))
             }
         }
     }
