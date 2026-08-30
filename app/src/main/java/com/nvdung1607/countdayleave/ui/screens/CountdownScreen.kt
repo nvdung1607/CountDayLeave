@@ -225,21 +225,6 @@ fun CountdownScreen(
                                         )
                                     )
                             )
-                            .then(
-                                if (hasCustomBackground)
-                                    Modifier.border(
-                                        width = 1.2.dp,
-                                        brush = Brush.verticalGradient(
-                                            listOf(
-                                                Color.White.copy(alpha = 0.90f),
-                                                Color.White.copy(alpha = 0.35f)
-                                            )
-                                        ),
-                                        shape = RoundedCornerShape(28.dp)
-                                    )
-                                else
-                                    Modifier
-                            )
                             .padding(vertical = 24.dp, horizontal = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -346,22 +331,14 @@ fun CountdownScreen(
                     colors = CardDefaults.cardColors(
                         containerColor = if (hasCustomBackground) Color.White.copy(alpha = 0.45f) else AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
                     ),
-                    border = androidx.compose.foundation.BorderStroke(
+                    border = if (hasCustomBackground) null else androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (hasCustomBackground)
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.White.copy(alpha = 0.85f),
-                                    Color.White.copy(alpha = 0.30f)
-                                )
+                        Brush.linearGradient(
+                            colors = listOf(
+                                AppTheme.colors.gradientStart.copy(alpha = 0.2f),
+                                AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
                             )
-                        else
-                            Brush.linearGradient(
-                                colors = listOf(
-                                    AppTheme.colors.gradientStart.copy(alpha = 0.2f),
-                                    AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
-                                )
-                            )
+                        )
                     )
                 ) {
                     Row(
@@ -479,11 +456,6 @@ private fun TopBar(
     else
         AppTheme.colors.surfaceCard
 
-    val buttonBorder = if (hasCustomBackground)
-        Modifier.border(1.dp, Color.White.copy(alpha = 0.85f), CircleShape)
-    else
-        Modifier
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -499,7 +471,6 @@ private fun TopBar(
                 .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
                 .clip(CircleShape)
                 .background(buttonBackground)
-                .then(buttonBorder)
         ) {
             Icon(
                 imageVector = Icons.Rounded.ArrowBackIosNew,
@@ -519,9 +490,8 @@ private fun TopBar(
                 modifier = Modifier
                     .size(42.dp)
                     .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
-                    .clip(CircleShape)
-                    .background(buttonBackground)
-                    .then(buttonBorder)
+                .clip(CircleShape)
+                .background(buttonBackground)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Share,
@@ -537,9 +507,8 @@ private fun TopBar(
                 modifier = Modifier
                     .size(42.dp)
                     .shadow(if (hasCustomBackground) 8.dp else 0.dp, CircleShape, ambientColor = Color.Black.copy(alpha = 0.2f), spotColor = Color.Black.copy(alpha = 0.25f))
-                    .clip(CircleShape)
-                    .background(buttonBackground)
-                    .then(buttonBorder)
+                .clip(CircleShape)
+                .background(buttonBackground)
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Settings,
@@ -649,21 +618,6 @@ private fun CountdownCard(
             .clip(RoundedCornerShape(20.dp))
             .background(if (hasCustomBackground) Color.Transparent else AppTheme.colors.backgroundDark) // SOLID BACKGROUND only when not glass
             .background(cardBackground)
-            .then(
-                if (hasCustomBackground)
-                    Modifier.border(
-                        1.dp,
-                        Brush.verticalGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.85f),
-                                Color.White.copy(alpha = 0.35f)
-                            )
-                        ),
-                        RoundedCornerShape(20.dp)
-                    )
-                else
-                    Modifier
-            )
             .padding(1.dp)
     ) {
         Column(
