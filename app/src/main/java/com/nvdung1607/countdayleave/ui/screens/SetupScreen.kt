@@ -271,7 +271,7 @@ fun SetupScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Đếm xuôi",
+                        text = "Tính ngày đã qua",
                         color = if (isCountUp) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
                     )
@@ -287,7 +287,7 @@ fun SetupScreen(
                 value = milestoneName,
                 onValueChange = { milestoneName = it },
                 placeholder = {
-                    Text("Ví dụ: Ngày nghỉ việc", color = AppTheme.colors.textMuted)
+                    Text(if (isCountUp) "Ví dụ: Ngày yêu, ngày phẫu thuật..." else "Ví dụ: Ngày nghỉ việc, sinh nhật...", color = AppTheme.colors.textMuted)
                 },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
@@ -555,7 +555,7 @@ fun SetupScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isEditing) "💾  Lưu thay đổi" else if (isCountUp) "🚀  Bắt đầu đếm xuôi" else "🚀  Bắt đầu đếm ngược",
+                        text = if (isEditing) "💾  Lưu thay đổi" else if (isCountUp) "🚀  Bắt đầu theo dõi" else "🚀  Bắt đầu đếm ngược",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )

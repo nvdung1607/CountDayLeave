@@ -73,8 +73,23 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                     val quoteIndex = prefs.getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
                     val quote = com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
                     
-                    title = "${config.milestoneName}: Đã qua $timeText"
-                    body = "💡 \"$quote\""
+                    val isYearAnniversary = (days > 0 && days % 365 == 0L)
+                    val isHundredDays = (days > 0 && days % 100 == 0L)
+                    val isMonthAnniversary = (days > 0 && days % 30 == 0L)
+                    
+                    if (isYearAnniversary) {
+                        title = "🎉 Kỷ niệm ${days / 365} năm: ${config.milestoneName}!"
+                        body = "Tuyệt vời! Một chặng đường dài đã trôi qua."
+                    } else if (isHundredDays) {
+                        title = "🎉 Chúc mừng mốc $days ngày: ${config.milestoneName}!"
+                        body = "Wow, đã $days ngày trôi qua rồi đó!"
+                    } else if (isMonthAnniversary) {
+                        title = "🎉 Kỷ niệm ${days / 30} tháng: ${config.milestoneName}!"
+                        body = "Đã tròn ${days / 30} tháng kể từ ngày bắt đầu."
+                    } else {
+                        title = "${config.milestoneName}: Đã qua $timeText"
+                        body = "💡 \"$quote\""
+                    }
                     tapAction = "countdown"
                 } else {
                     val diff = config.targetEpochMillis - now

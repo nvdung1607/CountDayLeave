@@ -43,6 +43,11 @@ import com.nvdung1607.countdayleave.viewmodel.CountdownUiState
 import java.text.SimpleDateFormat
 import java.util.*
 
+import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
+import com.nvdung1607.countdayleave.ui.utils.WindowWidthClass
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 @Composable
 fun CountdownScreen(
     uiState: CountdownUiState,
@@ -50,6 +55,8 @@ fun CountdownScreen(
     onNavigateBack: () -> Unit
 ) {
     val notifyEnabled = uiState.notifyEnabled
+    val adaptiveInfo = rememberAdaptiveLayoutInfo()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -75,8 +82,7 @@ fun CountdownScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 24.dp),
+                .windowInsetsPadding(WindowInsets.systemBars),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val coroutineScope = rememberCoroutineScope()
@@ -105,205 +111,221 @@ fun CountdownScreen(
                 )
             }
 
-            // Top bar with back button
-            TopBar(
-                onBackClick = onNavigateBack,
-                onSettingsClick = onNavigateToSetup,
-                onShareClick = {
-                    try {
-                        val bitmap = android.graphics.Bitmap.createBitmap(
-                            view.width,
-                            view.height,
-                            android.graphics.Bitmap.Config.ARGB_8888
-                        )
-                        val canvas = android.graphics.Canvas(bitmap)
-                        view.draw(canvas)
-                        capturedBitmap = bitmap
-                        showShareDialog = true
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        android.widget.Toast.makeText(context, "Không thể tạo ảnh chia sẻ!", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }
-            )
-
-            Spacer(Modifier.weight(0.5f))
-
-            // Shareable Card Column containing Title, Date and Grid
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                AppTheme.colors.surfaceCard,
-                                AppTheme.colors.backgroundDark
+                    .fillMaxSize()
+                    .widthIn(max = adaptiveInfo.maxContentWidth)
+                    .then(
+                        if (adaptiveInfo.isCompactHeight || adaptiveInfo.fontScale > 1.15f || adaptiveInfo.isLandscape) {
+                            Modifier.verticalScroll(rememberScrollState())
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top bar with back button
+                TopBar(
+                    onBackClick = onNavigateBack,
+                    onSettingsClick = onNavigateToSetup,
+                    onShareClick = {
+                        try {
+                            val bitmap = android.graphics.Bitmap.createBitmap(
+                                view.width,
+                                view.height,
+                                android.graphics.Bitmap.Config.ARGB_8888
+                            )
+                            val canvas = android.graphics.Canvas(bitmap)
+                            view.draw(canvas)
+                            capturedBitmap = bitmap
+                            showShareDialog = true
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            android.widget.Toast.makeText(context, "Không thể tạo ảnh chia sẻ!", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                )
+
+                Spacer(Modifier.height(16.dp))
+
+                // Shareable Card Column containing Title, Date and Grid
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    AppTheme.colors.surfaceCard,
+                                    AppTheme.colors.backgroundDark
+                                )
+                            )
+                        )
+                        .padding(vertical = 24.dp, horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Tên mốc thời gian
+                    MilestoneTitle(name = uiState.milestoneName)
+
+                    Spacer(Modifier.height(8.dp))
+
+                    // Thời gian đến đích
+                    val targetDate = remember(uiState.targetEpochMillis) {
+                        SimpleDateFormat("dd/MM/yyyy  HH:mm", Locale.getDefault())
+                            .format(Date(uiState.targetEpochMillis))
+                    }
+                    Text(
+                        text = "🎯  $targetDate",
+                        color = AppTheme.colors.textSecondary,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // Countdown grid
+                    CountdownGrid(
+                        days    = uiState.days,
+                        hours   = uiState.hours,
+                        minutes = uiState.minutes,
+                        seconds = uiState.seconds,
+                        useFourInRow = adaptiveInfo.isLandscape && adaptiveInfo.screenWidthDp >= 560.dp
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                // Motivation Quote Card
+                val dateKey = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault()).format(java.util.Date()) }
+                var quoteIndex by remember(uiState.eventId, dateKey) {
+                    mutableStateOf(
+                        context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                            .getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
+                    )
+                }
+                val quote = remember(quoteIndex) { com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex) }
+                val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .clickable {
+                            clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(quote))
+                            android.widget.Toast.makeText(context, "Đã sao chép câu danh ngôn vào bộ nhớ tạm! 💡", android.widget.Toast.LENGTH_SHORT).show()
+                        },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Brush.linearGradient(
+                            colors = listOf(
+                                AppTheme.colors.gradientStart.copy(alpha = 0.2f),
+                                AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
                             )
                         )
                     )
-                    .padding(vertical = 24.dp, horizontal = 16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Tên mốc thời gian
-                MilestoneTitle(name = uiState.milestoneName)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp, horizontal = 4.dp), // Pushes buttons closer to edges
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(
+                            onClick = {
+                                val count = com.nvdung1607.countdayleave.data.QuoteRepository.getQuotesCount(context)
+                                val newIndex = (quoteIndex - 1 + count) % count
+                                quoteIndex = newIndex
+                                context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                                    .edit()
+                                    .putInt("quote_index_$dateKey", newIndex)
+                                    .apply()
+                                com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowBackIosNew,
+                                contentDescription = "Quote trước",
+                                tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
 
-                Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = buildAnnotatedString {
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = AppTheme.colors.accentPurpleLight,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
+                                    append("“ ")
+                                }
+                                append(quote)
+                                withStyle(
+                                    style = SpanStyle(
+                                        color = AppTheme.colors.accentPurpleLight,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                ) {
+                                    append(" ”")
+                                }
+                            },
+                            color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
+                            fontSize = 15.sp, // Larger quote size
+                            fontWeight = FontWeight.Medium,
+                            fontStyle = FontStyle.Italic,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 22.sp,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 4.dp)
+                        )
 
-                // Thời gian đến đích
-                val targetDate = remember(uiState.targetEpochMillis) {
-                    SimpleDateFormat("dd/MM/yyyy  HH:mm", Locale.getDefault())
-                        .format(Date(uiState.targetEpochMillis))
+                        IconButton(
+                            onClick = {
+                                val count = com.nvdung1607.countdayleave.data.QuoteRepository.getQuotesCount(context)
+                                val newIndex = (quoteIndex + 1) % count
+                                quoteIndex = newIndex
+                                context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
+                                    .edit()
+                                    .putInt("quote_index_$dateKey", newIndex)
+                                    .apply()
+                                com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowForwardIos,
+                                contentDescription = "Quote sau",
+                                tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
-                Text(
-                    text = "🎯  $targetDate",
-                    color = AppTheme.colors.textSecondary,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center
-                )
+
+                Spacer(Modifier.height(24.dp))
+
+                // Footer hint — chỉ hiển thị khi thông báo đang bật
+                if (notifyEnabled) {
+                    Text(
+                        text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
+                        color = AppTheme.colors.textMuted,
+                        fontSize = 13.sp,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp
+                    )
+                }
 
                 Spacer(Modifier.height(32.dp))
-
-                // Countdown grid
-                CountdownGrid(
-                    days    = uiState.days,
-                    hours   = uiState.hours,
-                    minutes = uiState.minutes,
-                    seconds = uiState.seconds
-                )
             }
-
-            Spacer(Modifier.height(32.dp))
-
-             // Motivation Quote Card
-            val dateKey = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault()).format(java.util.Date()) }
-            var quoteIndex by remember(uiState.eventId, dateKey) {
-                mutableStateOf(
-                    context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
-                        .getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
-                )
-            }
-            val quote = remember(quoteIndex) { com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex) }
-            val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .clickable {
-                        clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(quote))
-                        android.widget.Toast.makeText(context, "Đã sao chép câu danh ngôn vào bộ nhớ tạm! 💡", android.widget.Toast.LENGTH_SHORT).show()
-                    },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = AppTheme.colors.surfaceCard.copy(alpha = 0.6f)
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp,
-                    Brush.linearGradient(
-                        colors = listOf(
-                            AppTheme.colors.gradientStart.copy(alpha = 0.2f),
-                            AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
-                        )
-                    )
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp, horizontal = 4.dp), // Pushes buttons closer to edges
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = {
-                            val count = com.nvdung1607.countdayleave.data.QuoteRepository.getQuotesCount(context)
-                            val newIndex = (quoteIndex - 1 + count) % count
-                            quoteIndex = newIndex
-                            context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
-                                .edit()
-                                .putInt("quote_index_$dateKey", newIndex)
-                                .apply()
-                            com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = "Quote trước",
-                            tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    Text(
-                        text = buildAnnotatedString {
-                            withStyle(
-                                style = SpanStyle(
-                                    color = AppTheme.colors.accentPurpleLight,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
-                                append("“ ")
-                            }
-                            append(quote)
-                            withStyle(
-                                style = SpanStyle(
-                                    color = AppTheme.colors.accentPurpleLight,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            ) {
-                                append(" ”")
-                            }
-                        },
-                        color = AppTheme.colors.textPrimary.copy(alpha = 0.9f),
-                        fontSize = 15.sp, // Larger quote size
-                        fontWeight = FontWeight.Medium,
-                        fontStyle = FontStyle.Italic,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 22.sp,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 4.dp)
-                    )
-
-                    IconButton(
-                        onClick = {
-                            val count = com.nvdung1607.countdayleave.data.QuoteRepository.getQuotesCount(context)
-                            val newIndex = (quoteIndex + 1) % count
-                            quoteIndex = newIndex
-                            context.getSharedPreferences("widget_prefs", android.content.Context.MODE_PRIVATE)
-                                .edit()
-                                .putInt("quote_index_$dateKey", newIndex)
-                                .apply()
-                            com.nvdung1607.countdayleave.widget.CountdownWidgetProvider.updateAllWidgets(context)
-                        },
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowForwardIos,
-                            contentDescription = "Quote sau",
-                            tint = AppTheme.colors.textSecondary.copy(alpha = 0.8f),
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.weight(1f))
-
-            // Footer hint — chỉ hiển thị khi thông báo đang bật
-            if (notifyEnabled) {
-                Text(
-                    text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
-                    color = AppTheme.colors.textMuted,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp
-                )
-            }
-
-            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -392,25 +414,38 @@ private fun MilestoneTitle(name: String) {
     )
 }
 
-// ---- Countdown 2x2 grid ----
+// ---- Countdown 2x2 grid / 4-in-a-row grid ----
 @Composable
 private fun CountdownGrid(
     days: Long,
     hours: Long,
     minutes: Long,
-    seconds: Long
+    seconds: Long,
+    useFourInRow: Boolean = false
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+    if (useFourInRow) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true)
             CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f))
             CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true)
+        }
+    } else {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                CountdownCard(value = days,    label = "NGÀY", modifier = Modifier.weight(1f), isMain = true)
+                CountdownCard(value = hours,   label = "GIỜ",  modifier = Modifier.weight(1f), isMain = true)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                CountdownCard(value = minutes, label = "PHÚT", modifier = Modifier.weight(1f))
+                CountdownCard(value = seconds, label = "GIÂY", modifier = Modifier.weight(1f), isSeconds = true)
+            }
         }
     }
 }
@@ -424,6 +459,9 @@ private fun CountdownCard(
     isMain: Boolean = false,
     isSeconds: Boolean = false
 ) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val fontScale = density.fontScale
+
     val animatedValue by animateIntAsState(
         targetValue = value.toInt(),
         animationSpec = tween(durationMillis = 300, easing = EaseOut),
@@ -434,6 +472,12 @@ private fun CountdownCard(
         Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.25f), AppTheme.colors.gradientEnd.copy(alpha = 0.15f)))
     else
         Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
+
+    val targetFontSize = remember(isMain, fontScale) {
+        val baseSp = if (isMain) 52f else 38f
+        val scaledSp = if (fontScale > 1.2f) baseSp / (fontScale * 0.8f) else baseSp
+        scaledSp.sp
+    }
 
     Box(
         modifier = modifier
@@ -458,7 +502,7 @@ private fun CountdownCard(
                     else
                         Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
                 )
-                .padding(vertical = if (isMain) 28.dp else 20.dp),
+                .padding(vertical = if (isMain) 24.dp else 16.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             AnimatedContent(
@@ -474,9 +518,11 @@ private fun CountdownCard(
                     color = if (isSeconds) AppTheme.colors.accentBlue
                              else if (isMain) AppTheme.colors.textPrimary
                              else AppTheme.colors.accentPurpleLight,
-                    fontSize = if (isMain) 52.sp else 38.sp,
+                    fontSize = targetFontSize,
                     fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = (-1).sp
+                    letterSpacing = (-1).sp,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
             Spacer(Modifier.height(4.dp))
@@ -485,7 +531,8 @@ private fun CountdownCard(
                 color = AppTheme.colors.textMuted,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
-                letterSpacing = 2.sp
+                letterSpacing = 2.sp,
+                maxLines = 1
             )
         }
     }

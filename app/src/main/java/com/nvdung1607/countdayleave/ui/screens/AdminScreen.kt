@@ -38,6 +38,7 @@ import com.nvdung1607.countdayleave.model.CountdownConfig
 import com.nvdung1607.countdayleave.notification.DailyNotificationReceiver
 import com.nvdung1607.countdayleave.ui.theme.AppTheme
 import com.nvdung1607.countdayleave.widget.CountdownWidgetProvider
+import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -119,14 +120,21 @@ fun AdminScreen(
         },
         containerColor = AppTheme.colors.backgroundDeep
     ) { padding ->
-        LazyColumn(
+        val adaptiveInfo = rememberAdaptiveLayoutInfo()
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-            contentPadding = PaddingValues(bottom = 32.dp)
+                .padding(padding),
+            contentAlignment = Alignment.TopCenter
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .widthIn(max = adaptiveInfo.maxContentWidth)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                contentPadding = PaddingValues(bottom = 32.dp)
+            ) {
             // ---- SECTION 1: SYSTEM UTILITIES ----
             item {
                 Text(
@@ -514,6 +522,7 @@ fun AdminScreen(
             }
         }
     }
+}
 
     // ---- EVENT ADD/EDIT DIALOG ----
     if (showEventDialog) {

@@ -28,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nvdung1607.countdayleave.ui.components.FireworksCanvas
 import com.nvdung1607.countdayleave.ui.theme.*
+import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 @Composable
 fun CelebrationScreen(
@@ -60,17 +63,28 @@ fun CelebrationScreen(
         }
 
         // 2. Periodic Haptic vibrations (6 times, matching fireworks bursts at 750ms spacing)
-        val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
-        if (vibrator != null && vibrator.hasVibrator()) {
-            for (i in 0 until 6) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                    vibrator.vibrate(android.os.VibrationEffect.createOneShot(80L, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(80L)
-                }
-                kotlinx.coroutines.delay(750L)
+        try {
+            val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(android.content.Context.VIBRATOR_MANAGER_SERVICE) as? android.os.VibratorManager
+                vibratorManager?.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
             }
+
+            if (vibrator != null && vibrator.hasVibrator()) {
+                for (i in 0 until 6) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        vibrator.vibrate(android.os.VibrationEffect.createOneShot(80L, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                    } else {
+                        @Suppress("DEPRECATION")
+                        vibrator.vibrate(80L)
+                    }
+                    kotlinx.coroutines.delay(750L)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -186,112 +200,128 @@ fun CelebrationScreen(
             }
         }
 
-        // Main content (centered)
-        Column(
+        val adaptiveInfo = rememberAdaptiveLayoutInfo()
+
+        // Main content (centered with adaptive limits)
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .windowInsetsPadding(WindowInsets.systemBars),
+            contentAlignment = Alignment.Center
         ) {
-            // Shareable Card containing Emoji and Glassmorphism card
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                AppTheme.colors.surfaceCard,
-                                AppTheme.colors.backgroundDark
-                            )
-                        )
+                    .widthIn(max = adaptiveInfo.maxContentWidth)
+                    .then(
+                        if (adaptiveInfo.isCompactHeight || adaptiveInfo.fontScale > 1.15f || adaptiveInfo.isLandscape) {
+                            Modifier.verticalScroll(rememberScrollState())
+                        } else {
+                            Modifier
+                        }
                     )
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(horizontal = 32.dp, vertical = 64.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                // Giant celebration emoji
-                Text(
-                    text = "🎉",
-                    fontSize = 90.sp,
-                    modifier = Modifier.scale(emojiScale)
-                )
-
-                Spacer(Modifier.height(24.dp))
-
-                // Inner Glassmorphism congratulations card
-                Box(
+                // Shareable Card containing Emoji and Glassmorphism card
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(32.dp))
                         .background(
-                            Brush.linearGradient(
+                            Brush.verticalGradient(
                                 listOf(
-                                    AppTheme.colors.surfaceCard.copy(alpha = 0.5f),
-                                    AppTheme.colors.surfaceElevated.copy(alpha = 0.3f)
+                                    AppTheme.colors.surfaceCard,
+                                    AppTheme.colors.backgroundDark
                                 )
                             )
                         )
                         .padding(24.dp),
-                    contentAlignment = Alignment.Center
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "Chúc mừng!",
-                            color = AppTheme.colors.accentBlue,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 2.sp
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            text = "Đã đến ngày",
-                            color = AppTheme.colors.textSecondary,
-                            fontSize = 18.sp
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = milestoneName,
-                            color = AppTheme.colors.textPrimary,
-                            fontSize = 28.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 34.sp
-                        )
+                    // Giant celebration emoji
+                    Text(
+                        text = "🎉",
+                        fontSize = if (adaptiveInfo.fontScale > 1.2f) 64.sp else 90.sp,
+                        modifier = Modifier.scale(emojiScale)
+                    )
+
+                    Spacer(Modifier.height(24.dp))
+
+                    // Inner Glassmorphism congratulations card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(
+                                        AppTheme.colors.surfaceCard.copy(alpha = 0.5f),
+                                        AppTheme.colors.surfaceElevated.copy(alpha = 0.3f)
+                                    )
+                                )
+                            )
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "Chúc mừng!",
+                                color = AppTheme.colors.accentBlue,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 2.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                text = "Đã đến ngày",
+                                color = AppTheme.colors.textSecondary,
+                                fontSize = 18.sp
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = milestoneName.ifBlank { "Mốc thời gian" },
+                                color = AppTheme.colors.textPrimary,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 34.sp
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(Modifier.height(36.dp))
+                Spacer(Modifier.height(36.dp))
 
-            // Nút thiết lập mốc mới
-            Button(
-                onClick = onSetupNew,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = AppTheme.colors.textPrimary
-                ),
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Box(
+                // Nút thiết lập mốc mới
+                Button(
+                    onClick = onSetupNew,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.horizontalGradient(listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd)),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Transparent,
+                        contentColor = AppTheme.colors.textPrimary
+                    ),
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        "🎯  Thiết lập mốc mới",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.horizontalGradient(listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd)),
+                                shape = RoundedCornerShape(16.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "🎯  Thiết lập mốc mới",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
