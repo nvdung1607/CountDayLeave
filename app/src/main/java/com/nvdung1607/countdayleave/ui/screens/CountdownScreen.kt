@@ -52,7 +52,8 @@ import androidx.compose.foundation.verticalScroll
 fun CountdownScreen(
     uiState: CountdownUiState,
     onNavigateToSetup: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToCelebration: () -> Unit = {}
 ) {
     val notifyEnabled = uiState.notifyEnabled
     val adaptiveInfo = rememberAdaptiveLayoutInfo()
@@ -176,7 +177,7 @@ fun CountdownScreen(
                             .format(Date(uiState.targetEpochMillis))
                     }
                     Text(
-                        text = "🎯  $targetDate",
+                        text = if (uiState.isCountUp) "📍  Bắt đầu: $targetDate" else "🎯  Đích đến: $targetDate",
                         color = AppTheme.colors.textSecondary,
                         fontSize = 13.sp,
                         textAlign = TextAlign.Center
@@ -184,14 +185,56 @@ fun CountdownScreen(
 
                     Spacer(Modifier.height(24.dp))
 
-                    // Countdown grid
-                    CountdownGrid(
-                        days    = uiState.days,
-                        hours   = uiState.hours,
-                        minutes = uiState.minutes,
-                        seconds = uiState.seconds,
-                        useFourInRow = adaptiveInfo.isLandscape && adaptiveInfo.screenWidthDp >= 560.dp
-                    )
+                    if (uiState.isFinished && !uiState.isCountUp) {
+                        // Trạng thái sự kiện đã kết thúc
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        listOf(
+                                            Color(0xFF4CAF50).copy(alpha = 0.2f),
+                                            Color(0xFF81C784).copy(alpha = 0.1f)
+                                        )
+                                    )
+                                )
+                                .border(1.dp, Color(0xFF4CAF50).copy(alpha = 0.4f), RoundedCornerShape(18.dp))
+                                .padding(vertical = 20.dp, horizontal = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "🎉  ĐÃ HOÀN THÀNH MỐC THỜI GIAN!",
+                                    color = Color(0xFF81C784),
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Button(
+                                    onClick = onNavigateToCelebration,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF4CAF50),
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(14.dp),
+                                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
+                                ) {
+                                    Text("🎆  Xem màn pháo hoa mừng", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    } else {
+                        // Countdown grid
+                        CountdownGrid(
+                            days    = uiState.days,
+                            hours   = uiState.hours,
+                            minutes = uiState.minutes,
+                            seconds = uiState.seconds,
+                            useFourInRow = adaptiveInfo.isLandscape && adaptiveInfo.screenWidthDp >= 560.dp
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(24.dp))

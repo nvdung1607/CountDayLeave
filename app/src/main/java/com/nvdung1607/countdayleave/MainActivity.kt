@@ -127,7 +127,7 @@ fun AppNavigation(
                 events = events,
                 onEventClick = { eventId ->
                     val event = events.find { it.id == eventId }
-                    if (event != null && event.targetEpochMillis <= System.currentTimeMillis()) {
+                    if (event != null && !event.isCountUp && event.targetEpochMillis <= System.currentTimeMillis()) {
                         navController.navigate("${Routes.CELEBRATION}/$eventId")
                     } else {
                         navController.navigate("${Routes.COUNTDOWN}/$eventId")
@@ -235,6 +235,9 @@ fun AppNavigation(
                 },
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToCelebration = {
+                    navController.navigate("${Routes.CELEBRATION}/$eventId")
                 }
             )
         }

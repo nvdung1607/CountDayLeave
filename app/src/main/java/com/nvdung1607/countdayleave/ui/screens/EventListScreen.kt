@@ -71,8 +71,21 @@ fun EventListScreen(
 
             val sortedEvents = remember(events) {
                 events.sortedWith(
-                    compareBy<CountdownConfig> { it.targetEpochMillis <= System.currentTimeMillis() }
-                        .thenBy { it.targetEpochMillis }
+                    compareBy<CountdownConfig> { config ->
+                        val now = System.currentTimeMillis()
+                        when {
+                            !config.isCountUp && config.targetEpochMillis > now -> 0
+                            config.isCountUp -> 1
+                            else -> 2
+                        }
+                    }.thenBy { config ->
+                        val now = System.currentTimeMillis()
+                        if (!config.isCountUp && config.targetEpochMillis > now) {
+                            config.targetEpochMillis
+                        } else {
+                            -config.targetEpochMillis
+                        }
+                    }
                 )
             }
 
