@@ -19,6 +19,7 @@ import java.util.Calendar
 @Composable
 fun AppDatePickerDialog(
     initialMillis: Long?,
+    allowPastDates: Boolean = false,
     onDateSelected: (Long) -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -38,10 +39,10 @@ fun AppDatePickerDialog(
         initialSelectedDateMillis = initialMillis,
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis >= todayStart
+                return if (allowPastDates) true else utcTimeMillis >= todayStart
             }
             override fun isSelectableYear(year: Int): Boolean {
-                return year >= Calendar.getInstance().get(Calendar.YEAR)
+                return if (allowPastDates) true else year >= Calendar.getInstance().get(Calendar.YEAR)
             }
         }
     )

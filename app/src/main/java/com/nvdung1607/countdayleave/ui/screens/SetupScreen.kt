@@ -119,6 +119,7 @@ fun SetupScreen(
     if (showDatePicker) {
         AppDatePickerDialog(
             initialMillis = targetDateMillis,
+            allowPastDates = isCountUp,
             onDateSelected = { selectedDate ->
                 targetDateMillis = selectedDate
                 val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = selectedDate }
