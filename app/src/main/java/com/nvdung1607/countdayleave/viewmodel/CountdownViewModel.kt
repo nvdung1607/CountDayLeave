@@ -100,7 +100,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 isCountUp = isCountUp
             )
         }
-        if (notifyEnabled && targetEpochMillis > System.currentTimeMillis()) {
+        if (notifyEnabled && (isCountUp || targetEpochMillis > System.currentTimeMillis())) {
             scheduler.schedule(config)
         } else {
             scheduler.cancel(currentId)

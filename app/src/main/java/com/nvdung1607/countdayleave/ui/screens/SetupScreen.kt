@@ -364,8 +364,8 @@ fun SetupScreen(
                 )
             }
 
-            // Cảnh báo thời gian đã qua
-            if (isTimeInPast) {
+            // Cảnh báo thời gian
+            if (!isTimeValid && targetDateMillis != null) {
                 Spacer(Modifier.height(8.dp))
                 Row(
                     modifier = Modifier
@@ -383,7 +383,7 @@ fun SetupScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Text(
-                        text = "Thời gian đã qua! Vui lòng chọn lại ngày hoặc giờ hợp lệ.",
+                        text = if (isCountUp) "Vui lòng chọn thời gian ở trong quá khứ." else "Thời gian đã qua! Vui lòng chọn lại thời gian hợp lệ.",
                         color = androidx.compose.ui.graphics.Color(0xFFEF5350),
                         fontSize = 13.sp,
                         lineHeight = 18.sp
