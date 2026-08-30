@@ -669,13 +669,14 @@ private fun CountdownCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(19.dp))
-                .background(
-                    if (hasCustomBackground)
-                        Color.Transparent
-                    else if (isMain)
-                        Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.12f), AppTheme.colors.gradientEnd.copy(alpha = 0.08f)))
-                    else
-                        Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard))
+                .then(
+                    if (hasCustomBackground) {
+                        Modifier
+                    } else if (isMain) {
+                        Modifier.background(Brush.linearGradient(listOf(AppTheme.colors.gradientStart.copy(alpha = 0.12f), AppTheme.colors.gradientEnd.copy(alpha = 0.08f))))
+                    } else {
+                        Modifier.background(Brush.linearGradient(listOf(AppTheme.colors.surfaceCard, AppTheme.colors.surfaceCard)))
+                    }
                 )
                 .padding(vertical = if (isMain) 24.dp else 16.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally
