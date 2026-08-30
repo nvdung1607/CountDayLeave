@@ -182,11 +182,12 @@ fun CountdownScreen(
                     hasCustomBackground = hasCustomBackground
                 )
 
-                // Vertically centered content area
+                // Vertically centered content area (slightly lifted for visual balance)
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
+                        .offset(y = (-10).dp)
                         .then(
                             if (adaptiveInfo.isCompactHeight || adaptiveInfo.fontScale > 1.15f || adaptiveInfo.isLandscape) {
                                 Modifier.verticalScroll(rememberScrollState())
@@ -442,26 +443,26 @@ fun CountdownScreen(
                                 tint = if (hasCustomBackground) Color(0xFF1E293B) else AppTheme.colors.textSecondary.copy(alpha = 0.8f),
                                 modifier = Modifier.size(16.dp)
                             )
-                        }
                     }
                 }
+            }
 
-                Spacer(Modifier.height(24.dp))
-
-                // Footer hint — chỉ hiển thị khi thông báo đang bật
-                if (notifyEnabled) {
-                    Text(
-                        text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
-                        color = if (backgroundBitmap != null) Color.White.copy(alpha = 0.95f) else AppTheme.colors.textMuted,
-                        fontSize = 13.sp,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 20.sp,
-                        fontWeight = if (backgroundBitmap != null) FontWeight.SemiBold else FontWeight.Normal
-                    )
-                }
+            // Footer hint — anchored at the very bottom of the screen
+            if (notifyEnabled) {
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Hằng ngày bạn sẽ nhận được nhắc nhở\ncho đến khi đến đích 🚀",
+                    color = if (backgroundBitmap != null) Color.White.copy(alpha = 0.95f) else AppTheme.colors.textMuted,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                    fontWeight = if (backgroundBitmap != null) FontWeight.SemiBold else FontWeight.Normal
+                )
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
+}
 }
 }
 
