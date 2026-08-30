@@ -225,27 +225,10 @@ fun SetupScreen(
             // Loại sự kiện
             SectionLabel(text = "LOẠI SỰ KIỆN")
             Spacer(Modifier.height(8.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                EventTypeCard(
-                    title = "Đếm ngược",
-                    subtitle = "Sắp tới",
-                    icon = Icons.Rounded.HourglassTop,
-                    isSelected = !isCountUp,
-                    modifier = Modifier.weight(1f),
-                    onClick = { isCountUp = false }
-                )
-                EventTypeCard(
-                    title = "Ngày đã qua",
-                    subtitle = "Kỷ niệm",
-                    icon = Icons.Rounded.History,
-                    isSelected = isCountUp,
-                    modifier = Modifier.weight(1f),
-                    onClick = { isCountUp = true }
-                )
-            }
+            EventTypeSegmentedControl(
+                isCountUp = isCountUp,
+                onTypeChanged = { isCountUp = it }
+            )
 
             Spacer(Modifier.height(24.dp))
 
@@ -734,49 +717,60 @@ private fun QuickTemplateChip(
 }
 
 @Composable
-private fun EventTypeCard(
+private fun EventTypeSegmentedControl(
+    isCountUp: Boolean,
+    onTypeChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(AppTheme.colors.surfaceCard)
+            .border(
+                width = 1.dp,
+                color = AppTheme.colors.surfaceElevated.copy(alpha = 0.8f),
+                shape = RoundedCornerShape(14.dp)
+            )
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Đếm ngược
+        SegmentedButton(
+            title = "Đếm ngược",
+            icon = Icons.Rounded.HourglassTop,
+            isSelected = !isCountUp,
+            modifier = Modifier.weight(1f),
+            onClick = { onTypeChanged(false) }
+        )
+
+        // Ngày đã qua
+        SegmentedButton(
+            title = "Ngày đã qua",
+            icon = Icons.Rounded.History,
+            isSelected = isCountUp,
+            modifier = Modifier.weight(1f),
+            onClick = { onTypeChanged(true) }
+        )
+    }
+}
+
+@Composable
+private fun SegmentedButton(
     title: String,
-    subtitle: String,
     icon: ImageVector,
     isSelected: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val animatedElevation by animateDpAsState(
-        targetValue = if (isSelected) 10.dp else 0.dp,
-        animationSpec = tween(durationMillis = 250),
-        label = "event_type_elevation"
-    )
-
     Box(
         modifier = modifier
-            .shadow(
-                elevation = animatedElevation,
-                shape = RoundedCornerShape(16.dp),
-                ambientColor = if (isSelected) AppTheme.colors.gradientStart.copy(alpha = 0.45f) else Color.Transparent,
-                spotColor = if (isSelected) AppTheme.colors.gradientEnd.copy(alpha = 0.45f) else Color.Transparent
-            )
-            .clip(RoundedCornerShape(16.dp))
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(10.dp))
             .background(
                 if (isSelected)
-                    Brush.linearGradient(
-                        listOf(
-                            AppTheme.colors.gradientStart.copy(alpha = 0.22f),
-                            AppTheme.colors.gradientEnd.copy(alpha = 0.15f)
-                        )
-                    )
-                else
-                    Brush.linearGradient(
-                        listOf(
-                            AppTheme.colors.surfaceCard,
-                            AppTheme.colors.surfaceCard
-                        )
-                    )
-            )
-            .border(
-                width = if (isSelected) 1.5.dp else 1.dp,
-                brush = if (isSelected)
-                    Brush.linearGradient(
+                    Brush.horizontalGradient(
                         listOf(
                             AppTheme.colors.gradientStart,
                             AppTheme.colors.gradientEnd
@@ -785,53 +779,32 @@ private fun EventTypeCard(
                 else
                     Brush.linearGradient(
                         listOf(
-                            AppTheme.colors.surfaceElevated,
-                            AppTheme.colors.surfaceElevated
+                            Color.Transparent,
+                            Color.Transparent
                         )
-                    ),
-                shape = RoundedCornerShape(16.dp)
+                    )
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 14.dp, horizontal = 12.dp)
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isSelected)
-                            Brush.linearGradient(listOf(AppTheme.colors.gradientStart, AppTheme.colors.gradientEnd))
-                        else
-                            Brush.linearGradient(listOf(AppTheme.colors.surfaceElevated, AppTheme.colors.surfaceElevated))
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (isSelected) Color.White else AppTheme.colors.textMuted,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-            Spacer(Modifier.height(8.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) Color.White else AppTheme.colors.textMuted,
+                modifier = Modifier.size(17.dp)
+            )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = title,
-                color = if (isSelected) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
-                fontSize = 14.sp,
+                color = if (isSelected) Color.White else AppTheme.colors.textSecondary,
+                fontSize = 13.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = subtitle,
-                color = if (isSelected) AppTheme.colors.accentPurpleLight else AppTheme.colors.textMuted,
-                fontSize = 11.sp,
-                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                textAlign = TextAlign.Center
+                maxLines = 1
             )
         }
     }
