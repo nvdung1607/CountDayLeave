@@ -49,10 +49,15 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                 }
 
                 val now = System.currentTimeMillis()
-                val diff = config.targetEpochMillis - now
-
-                val (title, body, tapAction) = if (diff > 0) {
-                    val totalSeconds = diff / 1000
+                
+                val title: String
+                val body: String
+                val tapAction: String
+                
+                if (config.isCountUp) {
+                    val countUpDiff = now - config.targetEpochMillis
+                    val diffToUse = if (countUpDiff > 0) countUpDiff else 0L
+                    val totalSeconds = diffToUse / 1000
                     val days    = totalSeconds / 86400
                     val hours   = (totalSeconds % 86400) / 3600
                     val minutes = (totalSeconds % 3600) / 60
@@ -67,17 +72,37 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                     val dateKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
                     val quoteIndex = prefs.getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
                     val quote = com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
-                    Triple(
-                        "${config.milestoneName}: Còn $timeText",
-                        "💡 \"$quote\"",
-                        "countdown"
-                    )
+                    
+                    title = "${config.milestoneName}: Đã qua $timeText"
+                    body = "💡 \"$quote\""
+                    tapAction = "countdown"
                 } else {
-                    Triple(
-                        "${config.milestoneName}: Đã đến hạn rồi! 🎉",
-                        "Chúc mừng bạn đã hoàn thành mục tiêu!",
-                        "celebration"
-                    )
+                    val diff = config.targetEpochMillis - now
+                    if (diff > 0) {
+                        val totalSeconds = diff / 1000
+                        val days    = totalSeconds / 86400
+                        val hours   = (totalSeconds % 86400) / 3600
+                        val minutes = (totalSeconds % 3600) / 60
+
+                        val timeText = buildString {
+                            if (days > 0) append("${days} ngày ")
+                            if (hours > 0) append("${hours} giờ ")
+                            if (days == 0L && minutes > 0) append("${minutes} phút ")
+                        }.trim()
+
+                        val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+                        val dateKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
+                        val quoteIndex = prefs.getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
+                        val quote = com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
+                        
+                        title = "${config.milestoneName}: Còn $timeText"
+                        body = "💡 \"$quote\""
+                        tapAction = "countdown"
+                    } else {
+                        title = "${config.milestoneName}: Đã đến hạn rồi! 🎉"
+                        body = "Chúc mừng bạn đã hoàn thành mục tiêu!"
+                        tapAction = "celebration"
+                    }
                 }
 
                 // Cập nhật lại Widget khi chu kỳ alarm chạy
@@ -89,7 +114,7 @@ class DailyNotificationReceiver : BroadcastReceiver() {
                 sendNotification(context, title, body, tapAction, config.id, notificationId)
 
                 // Re-schedule alarm cho lần tiếp theo
-                if (diff > 0) {
+                if (config.isCountUp || config.targetEpochMillis - now > 0) {
                     val scheduler = NotificationScheduler(context)
                     scheduler.schedule(config)
                 }

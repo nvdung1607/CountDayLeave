@@ -99,17 +99,39 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                     return@launch
                 }
 
-                // Tính toán số ngày còn lại
+                // Tính toán số ngày
                 val now = System.currentTimeMillis()
-                val diff = event.targetEpochMillis - now
-
-                val daysLeft = if (diff > 0) {
-                    // Làm tròn lên số ngày còn lại
-                    (diff + (1000 * 60 * 60 * 24 - 1)) / (1000 * 60 * 60 * 24)
+                
+                val daysToShow: Long
+                val labelToShow: String
+                
+                if (event.isCountUp) {
+                    val diff = now - event.targetEpochMillis
+                    if (diff < 0) {
+                        daysToShow = 0L
+                    } else {
+                        daysToShow = diff / (1000 * 60 * 60 * 24)
+                    }
+                    labelToShow = "NGÀY ĐÃ QUA"
+                    views.setTextViewText(R.id.widget_days, daysToShow.toString())
+                    views.setTextViewText(R.id.widget_days_label, labelToShow)
                 } else {
-                    0L
+                    val diff = event.targetEpochMillis - now
+                    val daysLeft = if (diff > 0) {
+                        // Làm tròn lên số ngày còn lại
+                        (diff + (1000 * 60 * 60 * 24 - 1)) / (1000 * 60 * 60 * 24)
+                    } else {
+                        0L
+                    }
+                    if (daysLeft > 0) {
+                        views.setTextViewText(R.id.widget_days, daysLeft.toString())
+                        views.setTextViewText(R.id.widget_days_label, "NGÀY CÒN LẠI")
+                    } else {
+                        views.setTextViewText(R.id.widget_days, "🎉")
+                        views.setTextViewText(R.id.widget_days_label, "ĐÃ ĐẾN NGÀY")
+                    }
                 }
-
+                
                 val targetDateStr = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                     .format(Date(event.targetEpochMillis))
 
@@ -117,16 +139,8 @@ class CountdownWidgetProvider : AppWidgetProvider() {
                 val dateKey = SimpleDateFormat("yyyyMMdd", Locale.getDefault()).format(Date())
                 val quoteIndex = prefs.getInt("quote_index_$dateKey", com.nvdung1607.countdayleave.data.QuoteRepository.getQuoteOfTheDayIndex(context))
                 val quote = com.nvdung1607.countdayleave.data.QuoteRepository.getQuote(context, quoteIndex)
-
-                // Cập nhật text hiển thị
+                
                 views.setTextViewText(R.id.widget_title, event.milestoneName)
-                if (daysLeft > 0) {
-                    views.setTextViewText(R.id.widget_days, daysLeft.toString())
-                    views.setTextViewText(R.id.widget_days_label, "NGÀY CÒN LẠI")
-                } else {
-                    views.setTextViewText(R.id.widget_days, "🎉")
-                    views.setTextViewText(R.id.widget_days_label, "ĐÃ ĐẾN NGÀY")
-                }
                 views.setTextViewText(R.id.widget_target_date, "🎯 $targetDateStr")
                 views.setTextViewText(R.id.widget_quote, "“$quote”")
 

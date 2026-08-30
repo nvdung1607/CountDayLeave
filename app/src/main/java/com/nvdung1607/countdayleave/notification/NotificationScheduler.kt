@@ -27,7 +27,7 @@ class NotificationScheduler(private val context: Context) {
         if (!config.notifyEnabled || config.notifyTimes.isEmpty()) return
 
         // Không schedule alarm cho sự kiện đã hoàn thành, thực hiện cancel và return
-        if (config.targetEpochMillis <= System.currentTimeMillis()) {
+        if (!config.isCountUp && config.targetEpochMillis <= System.currentTimeMillis()) {
             cancel(config.id)
             return
         }

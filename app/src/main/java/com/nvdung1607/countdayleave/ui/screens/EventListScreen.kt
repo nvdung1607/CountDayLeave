@@ -4,9 +4,11 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -78,11 +80,13 @@ fun EventListScreen(
                 // ---- Empty state ----
                 EmptyState(onAddEvent = onAddEvent)
             } else {
-                // ---- Event list ----
-                LazyColumn(
+                // ---- Adaptive Event grid/list ----
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 320.dp),
                     contentPadding = PaddingValues(
                         start = 20.dp, end = 20.dp, top = 8.dp, bottom = 100.dp
                     ),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -207,10 +211,20 @@ private fun EventCard(
     onDelete: () -> Unit
 ) {
     val now = System.currentTimeMillis()
-    val diff = config.targetEpochMillis - now
-    val isFinished = diff <= 0
+    val isFinished: Boolean
+    val totalSeconds: Long
+    
+    if (config.isCountUp) {
+        isFinished = false
+        val countUpDiff = now - config.targetEpochMillis
+        val diffToUse = if (countUpDiff > 0) countUpDiff else 0L
+        totalSeconds = diffToUse / 1000
+    } else {
+        val diff = config.targetEpochMillis - now
+        isFinished = diff <= 0
+        totalSeconds = if (diff > 0) diff / 1000 else 0L
+    }
 
-    val totalSeconds = if (diff > 0) diff / 1000 else 0L
     val days    = totalSeconds / 86400
     val hours   = (totalSeconds % 86400) / 3600
     val minutes = (totalSeconds % 3600) / 60
@@ -381,7 +395,10 @@ private fun CountdownChip(value: Long, label: String) {
             text = "${value} ${label}",
             color = AppTheme.colors.accentPurpleLight,
             fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            softWrap = false,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -423,7 +440,7 @@ private fun EmptyState(onAddEvent: () -> Unit) {
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Hãy thêm mốc thời gian đầu tiên\nđể bắt đầu đếm ngược!",
+            text = "Hãy thêm mốc thời gian đầu tiên\nđể bắt đầu theo dõi!",
             color = AppTheme.colors.textMuted,
             fontSize = 14.sp,
             textAlign = TextAlign.Center,

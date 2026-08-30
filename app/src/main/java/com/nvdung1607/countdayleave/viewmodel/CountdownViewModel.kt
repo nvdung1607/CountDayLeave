@@ -27,7 +27,8 @@ data class CountdownUiState(
     val seconds: Long = 0L,
     val isFinished: Boolean = false,
     val notifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
-    val notifyEnabled: Boolean = true
+    val notifyEnabled: Boolean = true,
+    val isCountUp: Boolean = false
 )
 
 /**
@@ -57,7 +58,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                         milestoneName = config.milestoneName,
                         targetEpochMillis = config.targetEpochMillis,
                         notifyTimes = config.notifyTimes,
-                        notifyEnabled = config.notifyEnabled
+                        notifyEnabled = config.notifyEnabled,
+                        isCountUp = config.isCountUp
                     )
                 }
                 startTimer()
@@ -72,7 +74,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         milestoneName: String,
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
-        notifyEnabled: Boolean
+        notifyEnabled: Boolean,
+        isCountUp: Boolean
     ): String {
         val currentId = _uiState.value.eventId.ifBlank {
             java.util.UUID.randomUUID().toString()
@@ -82,7 +85,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
             milestoneName = milestoneName,
             targetEpochMillis = targetEpochMillis,
             notifyTimes = notifyTimes,
-            notifyEnabled = notifyEnabled
+            notifyEnabled = notifyEnabled,
+            isCountUp = isCountUp
         )
         dataStore.saveEvent(config)
         _uiState.update {
@@ -92,7 +96,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 milestoneName = milestoneName,
                 targetEpochMillis = targetEpochMillis,
                 notifyTimes = notifyTimes,
-                notifyEnabled = notifyEnabled
+                notifyEnabled = notifyEnabled,
+                isCountUp = isCountUp
             )
         }
         if (notifyEnabled && targetEpochMillis > System.currentTimeMillis()) {
@@ -125,24 +130,45 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
             while (true) {
                 val now = System.currentTimeMillis()
                 val target = _uiState.value.targetEpochMillis
-                val diff = target - now
-
-                if (diff <= 0) {
-                    _uiState.update {
-                        it.copy(days = 0, hours = 0, minutes = 0, seconds = 0, isFinished = true)
+                val isCountUp = _uiState.value.isCountUp
+                
+                if (isCountUp) {
+                    val diff = now - target
+                    if (diff < 0) {
+                        _uiState.update {
+                            it.copy(days = 0, hours = 0, minutes = 0, seconds = 0, isFinished = false)
+                        }
+                    } else {
+                        val totalSeconds = diff / 1000
+                        _uiState.update {
+                            it.copy(
+                                days    = totalSeconds / 86400,
+                                hours   = (totalSeconds % 86400) / 3600,
+                                minutes = (totalSeconds % 3600) / 60,
+                                seconds = totalSeconds % 60,
+                                isFinished = false
+                            )
+                        }
                     }
-                    break
-                }
+                } else {
+                    val diff = target - now
+                    if (diff <= 0) {
+                        _uiState.update {
+                            it.copy(days = 0, hours = 0, minutes = 0, seconds = 0, isFinished = true)
+                        }
+                        break
+                    }
 
-                val totalSeconds = diff / 1000
-                _uiState.update {
-                    it.copy(
-                        days    = totalSeconds / 86400,
-                        hours   = (totalSeconds % 86400) / 3600,
-                        minutes = (totalSeconds % 3600) / 60,
-                        seconds = totalSeconds % 60,
-                        isFinished = false
-                    )
+                    val totalSeconds = diff / 1000
+                    _uiState.update {
+                        it.copy(
+                            days    = totalSeconds / 86400,
+                            hours   = (totalSeconds % 86400) / 3600,
+                            minutes = (totalSeconds % 3600) / 60,
+                            seconds = totalSeconds % 60,
+                            isFinished = false
+                        )
+                    }
                 }
                 delay(1000L)
             }

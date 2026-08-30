@@ -24,7 +24,7 @@ class BootReceiver : BroadcastReceiver() {
             try {
                 val events = CountdownDataStore(context).eventsFlow.first()
                 val scheduler = NotificationScheduler(context)
-                events.filter { it.notifyEnabled && it.targetEpochMillis > System.currentTimeMillis() }.forEach { config ->
+                events.filter { it.notifyEnabled && (it.isCountUp || it.targetEpochMillis > System.currentTimeMillis()) }.forEach { config ->
                     scheduler.schedule(config)
                 }
             } finally {

@@ -83,6 +83,7 @@ class CountdownDataStore(private val context: Context) {
                 put("milestoneName", config.milestoneName)
                 put("targetEpochMillis", config.targetEpochMillis)
                 put("notifyEnabled", config.notifyEnabled)
+                put("isCountUp", config.isCountUp)
                 val timesArr = JSONArray()
                 config.notifyTimes.forEach { t ->
                     timesArr.put(JSONObject().apply {
@@ -115,7 +116,8 @@ class CountdownDataStore(private val context: Context) {
                         milestoneName = obj.getString("milestoneName"),
                         targetEpochMillis = obj.getLong("targetEpochMillis"),
                         notifyTimes = times,
-                        notifyEnabled = obj.optBoolean("notifyEnabled", true)
+                        notifyEnabled = obj.optBoolean("notifyEnabled", true),
+                        isCountUp = obj.optBoolean("isCountUp", false)
                     )
                 } catch (e: Exception) { null }
             }

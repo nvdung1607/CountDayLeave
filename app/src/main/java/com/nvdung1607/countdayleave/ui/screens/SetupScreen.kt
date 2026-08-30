@@ -35,6 +35,7 @@ import android.os.Build
 import android.Manifest
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
+import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
 
 private const val DEFAULT_TARGET_HOUR = 9
 
@@ -45,18 +46,21 @@ fun SetupScreen(
     initialTargetMillis: Long? = null,
     initialNotifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     initialNotifyEnabled: Boolean = true,
+    initialIsCountUp: Boolean = false,
     isEditing: Boolean = false,
     onSave: (
         milestoneName: String,
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
-        notifyEnabled: Boolean
+        notifyEnabled: Boolean,
+        isCountUp: Boolean
     ) -> Unit,
     onDelete: () -> Unit = {},
     onBack: () -> Unit
 ) {
     // ---- State ----
     var milestoneName by remember(initialMilestoneName) { mutableStateOf(initialMilestoneName) }
+    var isCountUp by remember(initialIsCountUp) { mutableStateOf(initialIsCountUp) }
     var targetDateMillis by remember(initialTargetMillis) { mutableStateOf(initialTargetMillis) }
     var targetHour by remember(initialTargetMillis) { mutableIntStateOf(
         if (initialTargetMillis != null) {
@@ -108,7 +112,8 @@ fun SetupScreen(
     // ---- Validation ----
     val combinedEpoch = if (targetDateMillis != null) buildTargetEpoch() else null
     val isTimeInPast = combinedEpoch != null && combinedEpoch <= System.currentTimeMillis()
-    val isValid = milestoneName.isNotBlank() && targetDateMillis != null && !isTimeInPast && (!notifyEnabled || notifyTimes.isNotEmpty())
+    val isTimeValid = if (isCountUp) isTimeInPast else !isTimeInPast
+    val isValid = milestoneName.isNotBlank() && targetDateMillis != null && isTimeValid && (!notifyEnabled || notifyTimes.isNotEmpty())
 
     // ---- Dialogs ----
     if (showDatePicker) {
@@ -167,14 +172,18 @@ fun SetupScreen(
     }
 
     // ---- UI ----
+    val adaptiveInfo = rememberAdaptiveLayoutInfo()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppTheme.colors.backgroundDark)
+            .background(AppTheme.colors.backgroundDark),
+        contentAlignment = Alignment.TopCenter
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .widthIn(max = adaptiveInfo.maxContentWidth)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 32.dp)
@@ -208,6 +217,68 @@ fun SetupScreen(
             SetupHeader(isEditing = isEditing)
 
             Spacer(Modifier.height(32.dp))
+
+            // Loại sự kiện
+            SectionLabel(text = "LOẠI SỰ KIỆN")
+            Spacer(Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Đếm ngược
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AppTheme.colors.surfaceCard)
+                        .clickable { isCountUp = false }
+                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                ) {
+                    RadioButton(
+                        selected = !isCountUp,
+                        onClick = { isCountUp = false },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = AppTheme.colors.accentPurple,
+                            unselectedColor = AppTheme.colors.textMuted
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Đếm ngược",
+                        color = if (!isCountUp) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                    )
+                }
+
+                // Đếm xuôi
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AppTheme.colors.surfaceCard)
+                        .clickable { isCountUp = true }
+                        .padding(horizontal = 12.dp, vertical = 12.dp)
+                ) {
+                    RadioButton(
+                        selected = isCountUp,
+                        onClick = { isCountUp = true },
+                        colors = RadioButtonDefaults.colors(
+                            selectedColor = AppTheme.colors.accentPurple,
+                            unselectedColor = AppTheme.colors.textMuted
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Đếm xuôi",
+                        color = if (isCountUp) AppTheme.colors.textPrimary else AppTheme.colors.textSecondary,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(24.dp))
 
             // Tên mốc thời gian
             SectionLabel(text = "TÊN MỐC THỜI GIAN")
@@ -453,7 +524,8 @@ fun SetupScreen(
                             milestoneName.trim(),
                             buildTargetEpoch(),
                             notifyTimes,
-                            notifyEnabled
+                            notifyEnabled,
+                            isCountUp
                         )
                     }
                 },
@@ -483,7 +555,7 @@ fun SetupScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isEditing) "💾  Lưu thay đổi" else "🚀  Bắt đầu đếm ngược",
+                        text = if (isEditing) "💾  Lưu thay đổi" else if (isCountUp) "🚀  Bắt đầu đếm xuôi" else "🚀  Bắt đầu đếm ngược",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
