@@ -32,6 +32,9 @@ import com.nvdung1607.countdayleave.model.CountdownConfig
 import com.nvdung1607.countdayleave.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
+import android.graphics.BitmapFactory
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun EventListScreen(
@@ -275,6 +278,16 @@ private fun EventCard(
         )
     }
 
+    val cardBitmap = remember(config.backgroundImagePath) {
+        if (!config.backgroundImagePath.isNullOrBlank()) {
+            try {
+                BitmapFactory.decodeFile(config.backgroundImagePath)?.asImageBitmap()
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -313,27 +326,43 @@ private fun EventCard(
                 .padding(start = 16.dp, end = 12.dp, top = 16.dp, bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Emoji / Status indicator
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        Brush.radialGradient(
-                            if (isFinished)
-                                listOf(Color(0xFF4CAF50).copy(alpha = 0.2f), Color.Transparent)
-                            else
-                                listOf(AppTheme.colors.gradientStart.copy(alpha = 0.2f), Color.Transparent)
+            // Thumbnail / Emoji indicator
+            if (cardBitmap != null) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, AppTheme.colors.accentPurpleLight.copy(alpha = 0.8f), CircleShape)
+                ) {
+                    androidx.compose.foundation.Image(
+                        bitmap = cardBitmap,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            Brush.radialGradient(
+                                if (isFinished)
+                                    listOf(Color(0xFF4CAF50).copy(alpha = 0.2f), Color.Transparent)
+                                else
+                                    listOf(AppTheme.colors.gradientStart.copy(alpha = 0.2f), Color.Transparent)
+                            ),
+                            CircleShape
                         ),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = if (isFinished) Icons.Rounded.Celebration else Icons.Rounded.CalendarToday,
-                    contentDescription = null,
-                    tint = if (isFinished) Color(0xFF4CAF50) else AppTheme.colors.accentPurple,
-                    modifier = Modifier.size(24.dp)
-                )
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isFinished) Icons.Rounded.Celebration else Icons.Rounded.CalendarToday,
+                        contentDescription = null,
+                        tint = if (isFinished) Color(0xFF4CAF50) else AppTheme.colors.accentPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.width(14.dp))

@@ -28,7 +28,8 @@ data class CountdownUiState(
     val isFinished: Boolean = false,
     val notifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     val notifyEnabled: Boolean = true,
-    val isCountUp: Boolean = false
+    val isCountUp: Boolean = false,
+    val backgroundImagePath: String? = null
 )
 
 /**
@@ -59,7 +60,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                         targetEpochMillis = config.targetEpochMillis,
                         notifyTimes = config.notifyTimes,
                         notifyEnabled = config.notifyEnabled,
-                        isCountUp = config.isCountUp
+                        isCountUp = config.isCountUp,
+                        backgroundImagePath = config.backgroundImagePath
                     )
                 }
                 startTimer()
@@ -75,7 +77,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean,
-        isCountUp: Boolean
+        isCountUp: Boolean,
+        backgroundImagePath: String? = null
     ): String {
         val currentId = _uiState.value.eventId.ifBlank {
             java.util.UUID.randomUUID().toString()
@@ -86,7 +89,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
             targetEpochMillis = targetEpochMillis,
             notifyTimes = notifyTimes,
             notifyEnabled = notifyEnabled,
-            isCountUp = isCountUp
+            isCountUp = isCountUp,
+            backgroundImagePath = backgroundImagePath
         )
         dataStore.saveEvent(config)
         _uiState.update {
@@ -97,7 +101,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
                 targetEpochMillis = targetEpochMillis,
                 notifyTimes = notifyTimes,
                 notifyEnabled = notifyEnabled,
-                isCountUp = isCountUp
+                isCountUp = isCountUp,
+                backgroundImagePath = backgroundImagePath
             )
         }
         if (notifyEnabled && (isCountUp || targetEpochMillis > System.currentTimeMillis())) {

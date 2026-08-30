@@ -45,4 +45,17 @@ class CountdownConfigTest {
         )
         assertTrue(config.isCountUp)
     }
+
+    @Test
+    fun testBackgroundImagePath() {
+        val config = CountdownConfig(
+            milestoneName = "Sinh nhật người yêu",
+            targetEpochMillis = 1750000000000L,
+            notifyTimes = emptyList(),
+            notifyEnabled = false,
+            backgroundImagePath = "/data/user/0/com.nvdung1607.countdayleave/files/event_backgrounds/bg_test.jpg"
+        )
+        assertNotNull(config.backgroundImagePath)
+        assertEquals("/data/user/0/com.nvdung1607.countdayleave/files/event_backgrounds/bg_test.jpg", config.backgroundImagePath)
+    }
 }

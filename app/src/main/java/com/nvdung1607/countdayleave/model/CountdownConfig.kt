@@ -8,6 +8,7 @@ data class CountdownConfig(
     val targetEpochMillis: Long,    // Thời điểm đích (epoch milliseconds)
     val notifyTimes: List<NotifyTime>, // Danh sách các giờ gửi thông báo hằng ngày
     val notifyEnabled: Boolean,     // Bật/tắt thông báo
-    val isCountUp: Boolean = false  // Cờ đánh dấu đếm xuôi (quá khứ) hay đếm ngược (tương lai)
+    val isCountUp: Boolean = false, // Cờ đánh dấu đếm xuôi (quá khứ) hay đếm ngược (tương lai)
+    val backgroundImagePath: String? = null // Đường dẫn ảnh nền tùy chỉnh (tùy chọn)
 )
 

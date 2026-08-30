@@ -48,6 +48,10 @@ import com.nvdung1607.countdayleave.ui.utils.WindowWidthClass
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
+import android.graphics.BitmapFactory
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+
 @Composable
 fun CountdownScreen(
     uiState: CountdownUiState,
@@ -58,27 +62,61 @@ fun CountdownScreen(
     val notifyEnabled = uiState.notifyEnabled
     val adaptiveInfo = rememberAdaptiveLayoutInfo()
 
+    val backgroundBitmap = remember(uiState.backgroundImagePath) {
+        if (!uiState.backgroundImagePath.isNullOrBlank()) {
+            try {
+                BitmapFactory.decodeFile(uiState.backgroundImagePath)?.asImageBitmap()
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(AppTheme.colors.backgroundDeep)
     ) {
-        // Ambient glow background
-        Box(
-            modifier = Modifier
-                .size(400.dp)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            AppTheme.colors.gradientStart.copy(alpha = 0.15f),
-                            Color.Transparent
+        if (backgroundBitmap != null) {
+            // Fullscreen custom background image
+            androidx.compose.foundation.Image(
+                bitmap = backgroundBitmap,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            // Multi-layer dark gradient overlay to ensure text contrast and legibility
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                AppTheme.colors.backgroundDeep.copy(alpha = 0.85f),
+                                AppTheme.colors.backgroundDeep.copy(alpha = 0.70f),
+                                AppTheme.colors.backgroundDeep.copy(alpha = 0.92f)
+                            )
                         )
-                    ),
-                    shape = CircleShape
-                )
-                .align(Alignment.TopCenter)
-                .offset(y = (-80).dp)
-        )
+                    )
+            )
+        } else {
+            // Ambient glow background
+            Box(
+                modifier = Modifier
+                    .size(400.dp)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                AppTheme.colors.gradientStart.copy(alpha = 0.15f),
+                                Color.Transparent
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+                    .align(Alignment.TopCenter)
+                    .offset(y = (-80).dp)
+            )
+        }
 
         Column(
             modifier = Modifier

@@ -179,10 +179,11 @@ fun AppNavigation(
                 initialNotifyTimes = uiState.notifyTimes,
                 initialNotifyEnabled = uiState.notifyEnabled,
                 initialIsCountUp = uiState.isCountUp,
+                initialBackgroundImagePath = uiState.backgroundImagePath,
                 isEditing = eventId != null,
-                onSave = { name, targetMillis, notifyTimes, notifyEnabled, isCountUp ->
+                onSave = { name, targetMillis, notifyTimes, notifyEnabled, isCountUp, backgroundImagePath ->
                     coroutineScope.launch {
-                        val savedId = viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled, isCountUp)
+                        val savedId = viewModel.saveConfig(name, targetMillis, notifyTimes, notifyEnabled, isCountUp, backgroundImagePath)
                         if (eventId == null) {
                             navController.navigate("${Routes.COUNTDOWN}/$savedId") {
                                 popUpTo(Routes.EVENT_LIST) { inclusive = false }

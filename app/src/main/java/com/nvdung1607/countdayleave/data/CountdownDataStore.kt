@@ -70,10 +70,14 @@ class CountdownDataStore(private val context: Context) {
         }
     }
 
-    /** Xóa một sự kiện theo id. */
+    /** Xóa một sự kiện theo id và dọn dẹp ảnh nền. */
     suspend fun deleteEvent(eventId: String) {
         context.dataStore.edit { prefs ->
             val current = prefs[KEY_EVENTS_JSON]?.let { parseEventsJson(it) } ?: emptyList()
+            val eventToDelete = current.find { it.id == eventId }
+            eventToDelete?.backgroundImagePath?.let {
+                com.nvdung1607.countdayleave.ui.utils.ImageStorageUtils.deleteImage(it)
+            }
             val updated = current.filter { it.id != eventId }
             prefs[KEY_EVENTS_JSON] = serializeEventsJson(updated)
         }
@@ -95,6 +99,9 @@ class CountdownDataStore(private val context: Context) {
                 put("targetEpochMillis", config.targetEpochMillis)
                 put("notifyEnabled", config.notifyEnabled)
                 put("isCountUp", config.isCountUp)
+                if (config.backgroundImagePath != null) {
+                    put("backgroundImagePath", config.backgroundImagePath)
+                }
                 val timesArr = JSONArray()
                 config.notifyTimes.forEach { t ->
                     timesArr.put(JSONObject().apply {
@@ -128,7 +135,8 @@ class CountdownDataStore(private val context: Context) {
                         targetEpochMillis = obj.getLong("targetEpochMillis"),
                         notifyTimes = times,
                         notifyEnabled = obj.optBoolean("notifyEnabled", true),
-                        isCountUp = obj.optBoolean("isCountUp", false)
+                        isCountUp = obj.optBoolean("isCountUp", false),
+                        backgroundImagePath = if (obj.has("backgroundImagePath")) obj.optString("backgroundImagePath").ifBlank { null } else null
                     )
                 } catch (e: Exception) { null }
             }

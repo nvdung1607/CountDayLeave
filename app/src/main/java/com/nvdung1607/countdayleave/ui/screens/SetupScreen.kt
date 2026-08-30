@@ -40,6 +40,11 @@ import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import com.nvdung1607.countdayleave.ui.utils.rememberAdaptiveLayoutInfo
 
+import androidx.activity.result.PickVisualMediaRequest
+import android.graphics.BitmapFactory
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+
 private const val DEFAULT_TARGET_HOUR = 9
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,13 +55,15 @@ fun SetupScreen(
     initialNotifyTimes: List<NotifyTime> = listOf(NotifyTime(8, 0)),
     initialNotifyEnabled: Boolean = true,
     initialIsCountUp: Boolean = false,
+    initialBackgroundImagePath: String? = null,
     isEditing: Boolean = false,
     onSave: (
         milestoneName: String,
         targetEpochMillis: Long,
         notifyTimes: List<NotifyTime>,
         notifyEnabled: Boolean,
-        isCountUp: Boolean
+        isCountUp: Boolean,
+        backgroundImagePath: String?
     ) -> Unit,
     onDelete: () -> Unit = {},
     onBack: () -> Unit
@@ -77,8 +84,12 @@ fun SetupScreen(
     ) }
     var notifyTimes by remember(initialNotifyTimes) { mutableStateOf(initialNotifyTimes) }
     var notifyEnabled by remember(initialNotifyEnabled) { mutableStateOf(initialNotifyEnabled) }
+    var backgroundImagePath by remember(initialBackgroundImagePath) { mutableStateOf(initialBackgroundImagePath) }
+    var isProcessingImage by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -87,6 +98,30 @@ fun SetupScreen(
         } else {
             notifyEnabled = false
             Toast.makeText(context, "Ứng dụng cần quyền thông báo để gửi nhắc nhở hằng ngày!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            coroutineScope.launch {
+                isProcessingImage = true
+                val tempId = UUID.randomUUID().toString()
+                val savedPath = com.nvdung1607.countdayleave.ui.utils.ImageStorageUtils.saveImageFromUri(context, uri, tempId)
+                if (savedPath != null) {
+                    // Nếu đã có ảnh cũ, xóa file cũ đi
+                    backgroundImagePath?.let { oldPath ->
+                        if (oldPath != savedPath) {
+                            com.nvdung1607.countdayleave.ui.utils.ImageStorageUtils.deleteImage(oldPath)
+                        }
+                    }
+                    backgroundImagePath = savedPath
+                } else {
+                    Toast.makeText(context, "Không thể tải ảnh, vui lòng thử lại!", Toast.LENGTH_SHORT).show()
+                }
+                isProcessingImage = false
+            }
         }
     }
 
@@ -475,6 +510,28 @@ fun SetupScreen(
                 }
             }
 
+            Spacer(Modifier.height(24.dp))
+
+            // Ảnh nền sự kiện
+            SectionLabel(text = "ẢNH NỀN SỰ KIỆN (TÙY CHỌN)")
+            Spacer(Modifier.height(8.dp))
+
+            BackgroundImagePickerCard(
+                imagePath = backgroundImagePath,
+                isProcessing = isProcessingImage,
+                onPickImage = {
+                    photoPickerLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    )
+                },
+                onRemoveImage = {
+                    backgroundImagePath?.let {
+                        com.nvdung1607.countdayleave.ui.utils.ImageStorageUtils.deleteImage(it)
+                    }
+                    backgroundImagePath = null
+                }
+            )
+
             Spacer(Modifier.height(40.dp))
 
             // Nút lưu
@@ -486,7 +543,8 @@ fun SetupScreen(
                             buildTargetEpoch(),
                             notifyTimes,
                             notifyEnabled,
-                            isCountUp
+                            isCountUp,
+                            backgroundImagePath
                         )
                     }
                 },
@@ -806,6 +864,190 @@ private fun SegmentedButton(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                 maxLines = 1
             )
+        }
+    }
+}
+
+@Composable
+private fun BackgroundImagePickerCard(
+    imagePath: String?,
+    isProcessing: Boolean,
+    onPickImage: () -> Unit,
+    onRemoveImage: () -> Unit
+) {
+    val bitmap = remember(imagePath) {
+        if (!imagePath.isNullOrBlank()) {
+            try {
+                BitmapFactory.decodeFile(imagePath)?.asImageBitmap()
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(AppTheme.colors.surfaceCard)
+            .border(
+                1.dp,
+                AppTheme.colors.surfaceElevated.copy(alpha = 0.8f),
+                RoundedCornerShape(16.dp)
+            )
+            .padding(16.dp)
+    ) {
+        if (isProcessing) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = AppTheme.colors.accentPurple,
+                    strokeWidth = 2.5.dp
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "Đang xử lý ảnh...",
+                    color = AppTheme.colors.textSecondary,
+                    fontSize = 14.sp
+                )
+            }
+        } else if (bitmap != null) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Image preview with overlay
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                ) {
+                    androidx.compose.foundation.Image(
+                        bitmap = bitmap,
+                        contentDescription = "Ảnh nền sự kiện",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Subtle dark gradient overlay
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        Color.Black.copy(alpha = 0.6f)
+                                    )
+                                )
+                            )
+                    )
+                    Text(
+                        text = "Ảnh nền đã chọn",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .padding(12.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onPickImage,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = AppTheme.colors.accentPurple
+                        ),
+                        border = BorderStroke(1.dp, AppTheme.colors.accentPurple.copy(alpha = 0.5f)),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Rounded.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Đổi ảnh", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = onRemoveImage,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = AppTheme.colors.error
+                        ),
+                        border = BorderStroke(1.dp, AppTheme.colors.error.copy(alpha = 0.5f)),
+                        contentPadding = PaddingValues(vertical = 8.dp)
+                    ) {
+                        Icon(Icons.Rounded.DeleteOutline, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text("Xóa ảnh", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onPickImage)
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(
+                            Brush.linearGradient(
+                                listOf(
+                                    AppTheme.colors.gradientStart.copy(alpha = 0.2f),
+                                    AppTheme.colors.gradientEnd.copy(alpha = 0.1f)
+                                )
+                            ),
+                            RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.AddPhotoAlternate,
+                        contentDescription = "Chọn ảnh",
+                        tint = AppTheme.colors.accentPurple,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(Modifier.width(14.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Chọn ảnh từ thư viện",
+                        color = AppTheme.colors.textPrimary,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = "Làm ảnh nền mờ phía sau đồng hồ đếm ngược",
+                        color = AppTheme.colors.textMuted,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = AppTheme.colors.textMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
